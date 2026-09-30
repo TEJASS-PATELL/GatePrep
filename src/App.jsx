@@ -31,7 +31,6 @@ const SUBJECTS = {
       'Spatial aptitude'
     ]
   },
-
   'Engineering Maths': {
     short: 'EM',
     topics: [
@@ -58,7 +57,6 @@ const SUBJECTS = {
       'Conditional probability & Bayes theorem'
     ]
   },
-
   'Digital Logic': {
     short: 'DL',
     topics: [
@@ -71,7 +69,6 @@ const SUBJECTS = {
       'Floating-point representation'
     ]
   },
-
   'Computer Org. & Arch.': {
     short: 'COA',
     topics: [
@@ -87,7 +84,6 @@ const SUBJECTS = {
       'Pipeline hazards'
     ]
   },
-
   'Programming & DS': {
     short: 'PDS',
     topics: [
@@ -103,7 +99,6 @@ const SUBJECTS = {
       'Graphs'
     ]
   },
-
   Algorithms: {
     short: 'ALGO',
     topics: [
@@ -119,7 +114,6 @@ const SUBJECTS = {
       'Shortest paths'
     ]
   },
-
   'Theory of Computation': {
     short: 'TOC',
     topics: [
@@ -132,7 +126,6 @@ const SUBJECTS = {
       'Undecidability'
     ]
   },
-
   'Compiler Design': {
     short: 'CD',
     topics: [
@@ -147,7 +140,6 @@ const SUBJECTS = {
       'Common sub-expression elimination'
     ]
   },
-
   'Operating Systems': {
     short: 'OS',
     topics: [
@@ -164,7 +156,6 @@ const SUBJECTS = {
       'File systems'
     ]
   },
-
   Databases: {
     short: 'DB',
     topics: [
@@ -180,7 +171,6 @@ const SUBJECTS = {
       'Concurrency control'
     ]
   },
-
   'Computer Networks': {
     short: 'CN',
     topics: [
@@ -245,26 +235,21 @@ const WEIGHTS = {
 /* ---------- helpers ---------- */
 
 const ymd = (d) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
-    d.getDate()
-  ).padStart(2, '0')}`;
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 const today = () => ymd(new Date());
 
 const daysLeft = (s) =>
   Math.max(
     0,
-    Math.round(
-      (new Date(`${s}T00:00:00`) - new Date(`${today()}T00:00:00`)) / 864e5
-    )
+    Math.round((new Date(`${s}T00:00:00`) - new Date(`${today()}T00:00:00`)) / 864e5)
   );
 
 const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
 
 const fmt = (n) => Number(n).toFixed(n % 1 ? 1 : 0);
 
-const avg = (a) =>
-  a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+const avg = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : null);
 
 const uid = () =>
   globalThis.crypto?.randomUUID?.() ||
@@ -287,10 +272,7 @@ const band = (v) => (v < 40 ? 'red' : v < 70 ? 'amber' : 'green');
 const targetLabel = (min, max) => `${fmt(min)}–${fmt(max)}`;
 
 const clock = (s) =>
-  `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(
-    2,
-    '0'
-  )}`;
+  `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
 const hm = (min) => {
   const m = Math.round(min);
@@ -305,6 +287,7 @@ function targetStatus(score, min, max) {
 
 const blank = () => ({
   exam: EXAM_DEFAULT,
+  name: '',
   targetMin: DEFAULT_TARGET_MIN,
   targetMax: DEFAULT_TARGET_MAX,
   weekGoal: DEFAULT_WEEK_GOAL,
@@ -321,7 +304,6 @@ const blank = () => ({
   subjects: Object.fromEntries(
     NAMES.map((n) => {
       const k = SUBJECTS[n].topics.length;
-
       return [
         n,
         {
@@ -345,31 +327,24 @@ function normalize(p) {
     f.subjects[n] = {
       learn: s.learn.map((_, i) => Boolean(o.learn?.[i])),
       pyq: s.pyq.map((_, i) => Boolean(o.pyq?.[i])),
-      rev: s.rev.map((_, i) =>
-        clamp(Number(o.rev?.[i] || 0), 0, REV_ROUNDS)
-      ),
+      rev: s.rev.map((_, i) => clamp(Number(o.rev?.[i] || 0), 0, REV_ROUNDS)),
       weak: s.weak.map((_, i) => Boolean(o.weak?.[i]))
     };
   });
 
-  const obj = (x) =>
-    x && typeof x === 'object' && !Array.isArray(x) ? x : {};
+  const obj = (x) => (x && typeof x === 'object' && !Array.isArray(x) ? x : {});
 
   const nums = (x, keys) =>
     Object.fromEntries(
       Object.entries(obj(x))
-        .filter(
-          ([k, v]) =>
-            (!keys || keys.includes(k)) && Number.isFinite(Number(v))
-        )
+        .filter(([k, v]) => (!keys || keys.includes(k)) && Number.isFinite(Number(v)))
         .map(([k, v]) => [k, Math.max(0, Number(v))])
     );
 
   const savedMin = Number(p.targetMin);
   const savedMax = Number(p.targetMax);
   const legacyTarget = Number(p.target);
-  const hasRange =
-    Number.isFinite(savedMin) || Number.isFinite(savedMax);
+  const hasRange = Number.isFinite(savedMin) || Number.isFinite(savedMax);
 
   let targetMin = Number.isFinite(savedMin)
     ? savedMin
@@ -393,41 +368,21 @@ function normalize(p) {
 
   return {
     ...f,
-
+    name: String(p.name || '').slice(0, 24),
     exam: /^\d{4}-\d{2}-\d{2}$/.test(p.exam) ? p.exam : f.exam,
-
     targetMin,
     targetMax,
-
-    weekGoal: clamp(
-      Number(p.weekGoal) || DEFAULT_WEEK_GOAL,
-      1,
-      200
-    ),
-
+    weekGoal: clamp(Number(p.weekGoal) || DEFAULT_WEEK_GOAL, 1, 200),
     streak: Math.max(0, Number(p.streak) || 0),
-
     lastActive: String(p.lastActive || ''),
-
     dark: Boolean(p.dark),
-
     log: obj(p.log),
-
     focus: nums(p.focus),
-
     focusBy: nums(p.focusBy, NAMES),
-
     weights: Object.fromEntries(
-      NAMES.map((n) => [
-        n,
-        clamp(Number(p.weights?.[n]) || WEIGHTS[n] || 0, 0, 30)
-      ])
+      NAMES.map((n) => [n, clamp(Number(p.weights?.[n]) || WEIGHTS[n] || 0, 0, 30)])
     ),
-
-    planDate: /^\d{4}-\d{2}-\d{2}$/.test(p.planDate)
-      ? p.planDate
-      : '',
-
+    planDate: /^\d{4}-\d{2}-\d{2}$/.test(p.planDate) ? p.planDate : '',
     tasks: (Array.isArray(p.tasks) ? p.tasks : [])
       .filter(
         (t) =>
@@ -444,7 +399,6 @@ function normalize(p) {
         label: String(t.label || ''),
         done: Boolean(t.done)
       })),
-
     mocks: (Array.isArray(p.mocks) ? p.mocks : []).map((m) => ({
       id: m.id || uid(),
       name: String(m.name || 'Mock'),
@@ -493,7 +447,6 @@ function track(s, delta) {
 
 function metrics(d, name) {
   const total = SUBJECTS[name].topics.length;
-
   const learn = d.learn.filter(Boolean).length;
   const pyq = d.pyq.filter(Boolean).length;
   const rev = d.rev.reduce((a, x) => a + x, 0);
@@ -529,7 +482,6 @@ function overall(state) {
 
   NAMES.forEach((n) => {
     const m = metrics(state.subjects[n], n);
-
     t.learn += m.learn;
     t.pyq += m.pyq;
     t.rev += m.rev;
@@ -582,10 +534,7 @@ function nextAction(state, n) {
     };
   }
 
-  i = d.rev.findIndex(
-    (v, x) => d.learn[x] && v < REV_ROUNDS
-  );
-
+  i = d.rev.findIndex((v, x) => d.learn[x] && v < REV_ROUNDS);
   if (i >= 0) {
     return {
       idx: i,
@@ -625,16 +574,13 @@ function generatePlan(state) {
 
   for (const n of order) {
     if (learnCount >= 3) break;
-
     const i = state.subjects[n].learn.findIndex((v) => !v);
-
     if (i >= 0) {
       push(n, {
         idx: i,
         kind: 'learn',
         topic: SUBJECTS[n].topics[i]
       });
-
       learnCount++;
     }
   }
@@ -644,11 +590,7 @@ function generatePlan(state) {
 
   for (const n of order) {
     const d = state.subjects[n];
-
-    const i = d.pyq.findIndex(
-      (v, x) => !v && d.learn[x]
-    );
-
+    const i = d.pyq.findIndex((v, x) => !v && d.learn[x]);
     if (i < 0) continue;
 
     const m = metrics(d, n);
@@ -660,7 +602,6 @@ function generatePlan(state) {
         idx: i,
         topic: SUBJECTS[n].topics[i]
       };
-
       bestGap = gap;
     }
   }
@@ -675,18 +616,13 @@ function generatePlan(state) {
 
   for (const n of order) {
     const d = state.subjects[n];
-
-    const i = d.rev.findIndex(
-      (v, x) => d.learn[x] && v < REV_ROUNDS
-    );
-
+    const i = d.rev.findIndex((v, x) => d.learn[x] && v < REV_ROUNDS);
     if (i >= 0) {
       push(n, {
         idx: i,
         kind: 'rev1',
         topic: SUBJECTS[n].topics[i]
       });
-
       break;
     }
   }
@@ -699,14 +635,10 @@ const regenerateIfNeeded = (setState) =>
     if (s.planDate === today()) return s;
 
     const keep = s.tasks.filter((t) => !t.done);
-
     const fresh = generatePlan(s).filter(
       (g) =>
         !keep.some(
-          (k) =>
-            k.name === g.name &&
-            k.i === g.i &&
-            k.kind === g.kind
+          (k) => k.name === g.name && k.i === g.i && k.kind === g.kind
         )
     );
 
@@ -724,7 +656,6 @@ function useSettled(v) {
 
   useEffect(() => {
     const id = requestAnimationFrame(() => setX(v));
-
     return () => cancelAnimationFrame(id);
   }, [v]);
 
@@ -734,7 +665,6 @@ function useSettled(v) {
 function useTween(target, ms = 900) {
   const goal = Array.isArray(target) ? target : [target];
   const key = goal.join(',');
-
   const [val, setVal] = useState(() => goal.map(() => 0));
 
   useEffect(() => {
@@ -743,24 +673,15 @@ function useTween(target, ms = 900) {
       return undefined;
     }
 
-    const from =
-      val.length === goal.length
-        ? val
-        : goal.map(() => 0);
-
+    const from = val.length === goal.length ? val : goal.map(() => 0);
     const t0 = performance.now();
-
     let raf;
 
     const step = (t) => {
       const p = Math.min(1, (t - t0) / ms);
       const e = 1 - (1 - p) ** 3;
 
-      setVal(
-        goal.map(
-          (g, i) => from[i] + (g - from[i]) * e
-        )
-      );
+      setVal(goal.map((g, i) => from[i] + (g - from[i]) * e));
 
       if (p < 1) {
         raf = requestAnimationFrame(step);
@@ -768,7 +689,6 @@ function useTween(target, ms = 900) {
     };
 
     raf = requestAnimationFrame(step);
-
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, ms]);
@@ -789,15 +709,10 @@ function useCount(value, dur = 1.1) {
 
     const from = last.current;
     const start = performance.now();
-
     let raf;
 
     const step = (time) => {
-      const p = Math.min(
-        1,
-        (time - start) / (dur * 1000)
-      );
-
+      const p = Math.min(1, (time - start) / (dur * 1000));
       const e = 1 - (1 - p) ** 3;
       const next = from + (value - from) * e;
 
@@ -813,36 +728,24 @@ function useCount(value, dur = 1.1) {
     };
 
     raf = requestAnimationFrame(step);
-
     return () => cancelAnimationFrame(raf);
   }, [value, dur]);
 
   return v;
 }
 
-const Count = ({ to, dur }) => (
-  <>{Math.round(useCount(to, dur))}</>
-);
+const Count = ({ to, dur }) => <>{Math.round(useCount(to, dur))}</>;
 
 function usePageIn(ref, key) {
   useEffect(() => {
     if (reduced() || !ref.current) return undefined;
 
-    const children = Array.from(
-      ref.current.children
-    );
-
+    const children = Array.from(ref.current.children);
     children.forEach((child, index) => {
       child.animate(
         [
-          {
-            transform: 'translateY(22px)',
-            opacity: 0
-          },
-          {
-            transform: 'translateY(0)',
-            opacity: 1
-          }
+          { transform: 'translateY(22px)', opacity: 0 },
+          { transform: 'translateY(0)', opacity: 1 }
         ],
         {
           duration: 650,
@@ -866,70 +769,48 @@ const PATHS = {
       <path d="M8 3v17" />
     </>
   ),
-
   check: <path d="M20 6 9 17l-5-5" />,
-
   rotate: (
     <>
       <path d="M20 11a8 8 0 0 0-14.7-4L4 9" />
       <path d="M4 4v5h5M4 13a8 8 0 0 0 14.7 4L20 15M20 20v-5h-5" />
     </>
   ),
-
   chart: (
     <>
       <path d="M4 19V5M4 19h16" />
       <path d="m7 15 3-4 3 2 5-7" />
     </>
   ),
-
-  moon: (
-    <path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z" />
-  ),
-
+  moon: <path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z" />,
   sun: (
     <>
       <circle cx="12" cy="12" r="4" />
       <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
     </>
   ),
-
-  trash: (
-    <path d="M4 7h16M10 11v6M14 11v6M9 7V4h6v3M6 7l1 13h10l1-13" />
-  ),
-
+  trash: <path d="M4 7h16M10 11v6M14 11v6M9 7V4h6v3M6 7l1 13h10l1-13" />,
   arrow: <path d="M4 12h15M13 6l6 6-6 6" />,
-
   external: (
     <>
       <path d="M14 4h6v6M20 4l-9 9" />
       <path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6" />
     </>
   ),
-
   star: (
     <path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" />
   ),
-
   download: <path d="M12 4v11M7 11l5 5 5-5M5 20h14" />,
-
   upload: <path d="M12 20V9M7 13l5-5 5 5M5 4h14" />,
-
   flag: (
     <>
       <path d="M6 21V4" />
       <path d="M6 4h12l-3 4 3 4H6" />
     </>
   ),
-
   play: <path d="M7 4v16l13-8z" />,
-
   pause: <path d="M8 5v14M16 5v14" />,
-
-  stop: (
-    <rect x="6" y="6" width="12" height="12" rx="2" />
-  ),
-
+  stop: <rect x="6" y="6" width="12" height="12" rx="2" />,
   timer: (
     <>
       <circle cx="12" cy="13" r="8" />
@@ -962,10 +843,7 @@ function Ring({
   variant = 'progress',
   color
 }) {
-  const v = Math.round(
-    clamp(value || 0, 0, 100)
-  );
-
+  const v = Math.round(clamp(value || 0, 0, 100));
   const shown = useSettled(v);
 
   const r = (size - stroke) / 2;
@@ -989,10 +867,7 @@ function Ring({
         fontSize: Math.round(size * 0.2)
       }}
     >
-      <svg
-        viewBox={`0 0 ${size} ${size}`}
-        aria-label={`${v}% complete`}
-      >
+      <svg viewBox={`0 0 ${size} ${size}`} aria-label={`${v}% complete`}>
         <circle
           cx={c}
           cy={c}
@@ -1001,7 +876,6 @@ function Ring({
           strokeWidth={stroke}
           fill="none"
         />
-
         <circle
           cx={c}
           cy={c}
@@ -1011,13 +885,10 @@ function Ring({
           strokeWidth={stroke}
           fill="none"
           strokeDasharray={len}
-          strokeDashoffset={
-            len * (1 - shown / 100)
-          }
+          strokeDashoffset={len * (1 - shown / 100)}
           transform={`rotate(-90 ${c} ${c})`}
         />
       </svg>
-
       <div className="ring-c">
         <b>{v}%</b>
         {label && <small>{label}</small>}
@@ -1026,14 +897,8 @@ function Ring({
   );
 }
 
-const Bar = ({
-  value,
-  tone = 'blue',
-  color
-}) => {
-  const s = useSettled(
-    clamp(value || 0, 0, 100)
-  );
+const Bar = ({ value, tone = 'blue', color }) => {
+  const s = useSettled(clamp(value || 0, 0, 100));
 
   return (
     <div className="bar">
@@ -1041,82 +906,45 @@ const Bar = ({
         className={tone}
         style={{
           width: `${s}%`,
-          ...(color
-            ? { background: color }
-            : {})
+          ...(color ? { background: color } : {})
         }}
       />
     </div>
   );
 };
 
-const Col = ({
-  pct: p,
-  label,
-  on,
-  title
-}) => {
-  const h = useSettled(
-    clamp(p, 0, 100)
-  );
+const Col = ({ pct: p, label, on, title }) => {
+  const h = useSettled(clamp(p, 0, 100));
 
   return (
     <div className="col" title={title}>
       <div className="col-track">
-        <span
-          className={on ? 'on' : ''}
-          style={{ height: `${h}%` }}
-        />
+        <span className={on ? 'on' : ''} style={{ height: `${h}%` }} />
       </div>
-
-      <small className={on ? 'on' : ''}>
-        {label}
-      </small>
+      <small className={on ? 'on' : ''}>{label}</small>
     </div>
   );
 };
 
-const Head = ({
-  title,
-  sub,
-  action
-}) => (
+const Head = ({ title, sub, action }) => (
   <div className="page-head">
     <div>
       <h1>{title}</h1>
       {sub && <p>{sub}</p>}
     </div>
-
     {action}
   </div>
 );
 
-const Stat = ({
-  label,
-  value,
-  detail,
-  icon,
-  pctValue,
-  tone
-}) => (
+const Stat = ({ label, value, detail, icon, pctValue, tone }) => (
   <div className="stat">
     <div className="stat-top">
       <span>{label}</span>
-      <i className={`chip ${tone}`}>
-        {icon}
-      </i>
+      <i className={`chip ${tone}`}>{icon}</i>
     </div>
-
     <strong>{value}</strong>
-
     <small>{detail}</small>
-
-    {pctValue != null && (
-      <Bar
-        value={pctValue}
-        tone={tone}
-      />
-    )}
+    {pctValue != null && <Bar value={pctValue} tone={tone} />}
   </div>
 );
 
@@ -1124,37 +952,21 @@ function ReadinessByArea({ state }) {
   const rows = useMemo(
     () =>
       NAMES.map((n) => {
-        const m = metrics(
-          state.subjects[n],
-          n
-        );
-
+        const m = metrics(state.subjects[n], n);
         return {
           n,
           short: SUBJECTS[n].short,
           w: state.weights[n] || 0,
           r: m.readiness
         };
-      }).sort(
-        (a, b) => a.r - b.r
-      ),
+      }).sort((a, b) => a.r - b.r),
     [state.subjects, state.weights]
   );
 
   const weakest = rows[0];
-  const strongest =
-    rows[rows.length - 1];
-
-  const totalW = rows.reduce(
-    (a, x) => a + x.w,
-    0
-  );
-
-  const atRisk = rows.reduce(
-    (a, x) =>
-      a + x.w * (1 - x.r / 100),
-    0
-  );
+  const strongest = rows[rows.length - 1];
+  const totalW = rows.reduce((a, x) => a + x.w, 0);
+  const atRisk = rows.reduce((a, x) => a + x.w * (1 - x.r / 100), 0);
 
   return (
     <div className="readiness">
@@ -1171,18 +983,9 @@ function ReadinessByArea({ state }) {
             style={colorVar(x.n)}
             title={`${x.n}: ${x.w} marks, ${x.r}% ready`}
           >
-            <span className="r-name">
-              {x.n}
-            </span>
-
-            <Bar
-              value={x.r}
-              color={SUBJECT_COLORS[x.n]}
-            />
-
-            <span className="r-pct">
-              {x.r}%
-            </span>
+            <span className="r-name">{x.n}</span>
+            <Bar value={x.r} color={SUBJECT_COLORS[x.n]} />
+            <span className="r-pct">{x.r}%</span>
           </div>
         ))}
       </div>
@@ -1193,15 +996,9 @@ function ReadinessByArea({ state }) {
           style={colorVar(weakest.n)}
           title={weakest.n}
         >
-          <span>
-            Needs most work
-          </span>
-
+          <span>Needs most work</span>
           <b>{weakest.short}</b>
-
-          <em>
-            {weakest.r}% ready
-          </em>
+          <em>{weakest.r}% ready</em>
         </div>
 
         <div
@@ -1209,31 +1006,15 @@ function ReadinessByArea({ state }) {
           style={colorVar(strongest.n)}
           title={strongest.n}
         >
-          <span>
-            Strongest
-          </span>
-
-          <b>
-            {strongest.short}
-          </b>
-
-          <em>
-            {strongest.r}% ready
-          </em>
+          <span>Strongest</span>
+          <b>{strongest.short}</b>
+          <em>{strongest.r}% ready</em>
         </div>
 
         <div className="r-ins r-ins-risk">
-          <span>
-            Marks at risk
-          </span>
-
-          <b>
-            {atRisk.toFixed(1)}
-          </b>
-
-          <em>
-            of {fmt(totalW)} marks
-          </em>
+          <span>Marks at risk</span>
+          <b>{atRisk.toFixed(1)}</b>
+          <em>of {fmt(totalW)} marks</em>
         </div>
       </div>
     </div>
@@ -1250,244 +1031,115 @@ function RoseChart({ state }) {
   const GAP = 0.035;
 
   const total =
-    NAMES.reduce(
-      (a, k) => a + (state.weights[k] || 0),
-      0
-    ) || 1;
+    NAMES.reduce((a, k) => a + (state.weights[k] || 0), 0) || 1;
 
   const scores = NAMES.map(
-    (k) =>
-      metrics(
-        state.subjects[k],
-        k
-      ).readiness
+    (k) => metrics(state.subjects[k], k).readiness
   );
 
-  const vals = useTween(
-    scores,
-    1000
-  );
+  const vals = useTween(scores, 1000);
 
   let cursor = -Math.PI / 2;
 
-  const slices = NAMES.map(
-    (k, i) => {
-      const w =
-        state.weights[k] || 0;
+  const slices = NAMES.map((k, i) => {
+    const w = state.weights[k] || 0;
+    const span = (w / total) * Math.PI * 2;
+    const a0 = cursor + GAP / 2;
+    const a1 = Math.max(cursor + span - GAP / 2, a0 + 0.02);
 
-      const span =
-        (w / total) * Math.PI * 2;
+    cursor += span;
 
-      const a0 =
-        cursor + GAP / 2;
+    return {
+      k,
+      i,
+      w,
+      a0,
+      a1,
+      mid: (a0 + a1) / 2,
+      score: scores[i]
+    };
+  });
 
-      const a1 = Math.max(
-        cursor +
-        span -
-        GAP / 2,
-        a0 + 0.02
-      );
+  const pt = (r, t) => [C + r * Math.cos(t), C + r * Math.sin(t)];
 
-      cursor += span;
-
-      return {
-        k,
-        i,
-        w,
-        a0,
-        a1,
-        mid: (a0 + a1) / 2,
-        score: scores[i]
-      };
-    }
-  );
-
-  const pt = (r, t) => [
-    C + r * Math.cos(t),
-    C + r * Math.sin(t)
-  ];
-
-  const arc = (
-    r0,
-    r1,
-    a0,
-    a1
-  ) => {
-    const [
-      x0,
-      y0
-    ] = pt(r0, a0);
-
-    const [
-      x1,
-      y1
-    ] = pt(r1, a0);
-
-    const [
-      x2,
-      y2
-    ] = pt(r1, a1);
-
-    const [
-      x3,
-      y3
-    ] = pt(r0, a1);
-
-    const big =
-      a1 - a0 > Math.PI ? 1 : 0;
+  const arc = (r0, r1, a0, a1) => {
+    const [x0, y0] = pt(r0, a0);
+    const [x1, y1] = pt(r1, a0);
+    const [x2, y2] = pt(r1, a1);
+    const [x3, y3] = pt(r0, a1);
+    const big = a1 - a0 > Math.PI ? 1 : 0;
 
     return `M${x0},${y0}L${x1},${y1}A${r1},${r1} 0 ${big} 1 ${x2},${y2}L${x3},${y3}A${r0},${r0} 0 ${big} 0 ${x0},${y0}Z`;
   };
 
-  const reach = (v) =>
-    R0 +
-    ((R1 - R0) *
-      clamp(v, 0, 100)) /
-    100;
+  const reach = (v) => R0 + ((R1 - R0) * clamp(v, 0, 100)) / 100;
 
   const overallNow =
-    slices.reduce(
-      (a, s) =>
-        a +
-        vals[s.i] * s.w,
-      0
-    ) / total;
+    slices.reduce((a, s) => a + vals[s.i] * s.w, 0) / total;
 
-  const h =
-    hi != null
-      ? slices[hi]
-      : null;
-
-  const centerVal =
-    h
-      ? vals[h.i]
-      : overallNow;
+  const h = hi != null ? slices[hi] : null;
+  const centerVal = h ? vals[h.i] : overallNow;
 
   return (
     <div className="rose-wrap">
       <svg
-        className={`rose ${h ? 'has-hi' : ''
-          }`}
+        className={`rose ${h ? 'has-hi' : ''}`}
         viewBox={`0 0 ${S} ${S}`}
         role="group"
         aria-label="Readiness by subject, slice width shows marks weightage"
       >
-        {[25, 50, 75, 100].map(
-          (v) => (
-            <circle
-              key={v}
-              cx={C}
-              cy={C}
-              r={reach(v)}
-              className={`rose-ring ${v === 100
-                  ? 'outer'
-                  : ''
-                }`}
-            />
-          )
-        )}
+        {[25, 50, 75, 100].map((v) => (
+          <circle
+            key={v}
+            cx={C}
+            cy={C}
+            r={reach(v)}
+            className={`rose-ring ${v === 100 ? 'outer' : ''}`}
+          />
+        ))}
 
         {slices.map((s) => {
-          const color =
-            SUBJECT_COLORS[s.k];
-
-          const [
-            lx,
-            ly
-          ] = pt(
-            R1 + 20,
-            s.mid
-          );
-
+          const color = SUBJECT_COLORS[s.k];
+          const [lx, ly] = pt(R1 + 20, s.mid);
           const anchor =
-            Math.cos(s.mid) <
-              -0.2
+            Math.cos(s.mid) < -0.2
               ? 'end'
-              : Math.cos(
-                s.mid
-              ) > 0.2
+              : Math.cos(s.mid) > 0.2
                 ? 'start'
                 : 'middle';
 
           return (
             <g
               key={s.k}
-              className={`rose-g ${hi === s.i
-                  ? 'on'
-                  : ''
-                }`}
+              className={`rose-g ${hi === s.i ? 'on' : ''}`}
               tabIndex={0}
               aria-label={`${s.k}: ${s.w} marks, ${s.score}% ready`}
-              onMouseEnter={() =>
-                setHi(s.i)
-              }
-              onMouseLeave={() =>
-                setHi(null)
-              }
-              onFocus={() =>
-                setHi(s.i)
-              }
-              onBlur={() =>
-                setHi(null)
-              }
-              onClick={() =>
-                setHi(
-                  hi === s.i
-                    ? null
-                    : s.i
-                )
-              }
+              onMouseEnter={() => setHi(s.i)}
+              onMouseLeave={() => setHi(null)}
+              onFocus={() => setHi(s.i)}
+              onBlur={() => setHi(null)}
+              onClick={() => setHi(hi === s.i ? null : s.i)}
             >
               <path
-                d={arc(
-                  R0,
-                  R1,
-                  s.a0,
-                  s.a1
-                )}
+                d={arc(R0, R1, s.a0, s.a1)}
                 className="rose-ghost"
-                style={{
-                  fill: color
-                }}
+                style={{ fill: color }}
               />
-
               <path
-                d={arc(
-                  R0,
-                  reach(
-                    vals[s.i]
-                  ),
-                  s.a0,
-                  s.a1
-                )}
+                d={arc(R0, reach(vals[s.i]), s.a0, s.a1)}
                 className="rose-fill"
-                style={{
-                  fill: color
-                }}
+                style={{ fill: color }}
               />
-
               <text
                 x={lx}
                 y={ly - 2}
                 textAnchor={anchor}
                 className="rose-label"
               >
-                <tspan
-                  className="rose-code"
-                  x={lx}
-                >
-                  {
-                    SUBJECTS[
-                      s.k
-                    ].short
-                  }
+                <tspan className="rose-code" x={lx}>
+                  {SUBJECTS[s.k].short}
                 </tspan>
-
-                <tspan
-                  className="rose-pct"
-                  x={lx}
-                  dy="13"
-                >
+                <tspan className="rose-pct" x={lx} dy="13">
                   {s.score}%
                 </tspan>
               </text>
@@ -1495,42 +1147,20 @@ function RoseChart({ state }) {
           );
         })}
 
-        <circle
-          cx={C}
-          cy={C}
-          r={R0 - 6}
-          className="rose-core"
-        />
-
-        <text
-          x={C}
-          y={C + 4}
-          className="rose-big"
-        >
+        <circle cx={C} cy={C} r={R0 - 6} className="rose-core" />
+        <text x={C} y={C + 4} className="rose-big">
           {Math.round(centerVal)}%
         </text>
-
-        <text
-          x={C}
-          y={C + 24}
-          className="rose-sub"
-        >
-          {h
-            ? `${SUBJECTS[h.k].short} · ${h.w} marks`
-            : 'weighted'}
+        <text x={C} y={C + 24} className="rose-sub">
+          {h ? `${SUBJECTS[h.k].short} · ${h.w} marks` : 'weighted'}
         </text>
       </svg>
 
       <p className="rose-note">
         {h ? (
           <>
-            <b>{h.k}</b> · {h.w}{' '}
-            marks · {h.score}% ready ·{' '}
-            {(
-              h.w *
-              (1 - h.score / 100)
-            ).toFixed(1)}{' '}
-            marks still at risk
+            <b>{h.k}</b> · {h.w} marks · {h.score}% ready ·{' '}
+            {(h.w * (1 - h.score / 100)).toFixed(1)} marks still at risk
           </>
         ) : (
           'Slice width = marks weightage. Solid length = readiness. Pale area = still to cover.'
@@ -1542,91 +1172,45 @@ function RoseChart({ state }) {
 
 function Heatmap({ log }) {
   const W = 40;
-
   const now = new Date();
-
   const start = new Date(now);
 
-  start.setDate(
-    now.getDate() -
-    ((now.getDay() + 6) % 7) -
-    (W - 1) * 7
-  );
+  start.setDate(now.getDate() - ((now.getDay() + 6) % 7) - (W - 1) * 7);
 
-  const cells = Array.from(
-    { length: W * 7 },
-    (_, i) => {
-      const d = new Date(start);
-
-      d.setDate(
-        start.getDate() + i
-      );
-
-      return {
-        key: ymd(d),
-        future: d > now
-      };
-    }
-  );
+  const cells = Array.from({ length: W * 7 }, (_, i) => {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    return {
+      key: ymd(d),
+      future: d > now
+    };
+  });
 
   const lvl = (c) =>
-    c <= 0
-      ? 0
-      : c < 3
-        ? 1
-        : c < 6
-          ? 2
-          : c < 10
-            ? 3
-            : 4;
+    c <= 0 ? 0 : c < 3 ? 1 : c < 6 ? 2 : c < 10 ? 3 : 4;
 
-  const active = cells.filter(
-    (c) =>
-      (log[c.key] || 0) > 0
-  ).length;
+  const active = cells.filter((c) => (log[c.key] || 0) > 0).length;
 
   return (
     <>
-      <div
-        className="heat"
-        aria-label="Activity, last 40 weeks"
-      >
+      <div className="heat" aria-label="Activity, last 40 weeks">
         {cells.map((c, i) => (
           <span
             key={c.key}
-            className={`cell l${c.future
-                ? 'x'
-                : lvl(
-                  log[c.key] || 0
-                )
-              }`}
-            style={{
-              '--i': Math.floor(
-                i / 7
-              )
-            }}
-            title={`${c.key}: ${log[c.key] || 0
-              } ticks`}
+            className={`cell l${c.future ? 'x' : lvl(log[c.key] || 0)}`}
+            style={{ '--i': Math.floor(i / 7) }}
+            title={`${c.key}: ${log[c.key] || 0} ticks`}
           />
         ))}
       </div>
 
       <div className="heat-foot">
-        <span>
-          {active} active days in
-          40 weeks
-        </span>
-
+        <span>{active} active days in 40 weeks</span>
         <span className="legend">
           Less
-          {[0, 1, 2, 3, 4].map(
-            (l) => (
-              <i
-                key={l}
-                className={`cell l${l}`}
-              />
-            )
-          )}
+          {[0, 1, 2, 3, 4].map((l) => (
+            <i key={l} className={`cell l${l}`} />
+          ))}
           More
         </span>
       </div>
@@ -1634,40 +1218,20 @@ function Heatmap({ log }) {
   );
 }
 
-function MockChart({
-  mocks,
-  targetMin,
-  targetMax
-}) {
-  const [hi, setHi] =
-    useState(null);
+function MockChart({ mocks, targetMin, targetMax }) {
+  const [hi, setHi] = useState(null);
 
   const data = useMemo(
-    () =>
-      [...mocks].sort(
-        (a, b) =>
-          a.date.localeCompare(
-            b.date
-          )
-      ),
+    () => [...mocks].sort((a, b) => a.date.localeCompare(b.date)),
     [mocks]
   );
 
   if (!data.length) {
     return (
       <div className="empty">
-        <Icon
-          name="chart"
-          size={26}
-        />
-        <strong>
-          No mocks yet
-        </strong>
-        <span>
-          Log your first test
-          below to see the
-          trend.
-        </span>
+        <Icon name="chart" size={26} />
+        <strong>No mocks yet</strong>
+        <span>Log your first test below to see the trend.</span>
       </div>
     );
   }
@@ -1682,101 +1246,45 @@ function MockChart({
   const iw = W - L - R;
   const ih = H - T - B;
 
-  const sc = data.map(
-    (d) => d.score
-  );
-
+  const sc = data.map((d) => d.score);
   const lo = Math.max(
     0,
-    Math.floor(
-      (Math.min(
-        ...sc,
-        targetMin
-      ) - 8) /
-      10
-    ) * 10
+    Math.floor((Math.min(...sc, targetMin) - 8) / 10) * 10
   );
 
   const top = Math.min(
     100,
     Math.max(
       lo + 20,
-      Math.ceil(
-        (Math.max(
-          ...sc,
-          targetMax
-        ) + 8) /
-        10
-      ) * 10
+      Math.ceil((Math.max(...sc, targetMax) + 8) / 10) * 10
     )
   );
 
   const x = (i) =>
-    data.length === 1
-      ? L + iw / 2
-      : L +
-      (i * iw) /
-      (data.length - 1);
+    data.length === 1 ? L + iw / 2 : L + (i * iw) / (data.length - 1);
 
   const y = (v) =>
-    T +
-    ih -
-    ((clamp(
-      v,
-      lo,
-      top
-    ) -
-      lo) /
-      (top - lo)) *
-    ih;
+    T + ih - ((clamp(v, lo, top) - lo) / (top - lo)) * ih;
 
-  const P = data.map(
-    (d, i) => [
-      x(i),
-      y(d.score)
-    ]
-  );
+  const P = data.map((d, i) => [x(i), y(d.score)]);
 
-  const line = P.map(
-    (p, i) =>
-      i
-        ? `C${(P[i - 1][0] + p[0]) /
-        2
-        },${P[i - 1][1]} ${(P[i - 1][0] +
-          p[0]) /
-        2
-        },${p[1]} ${p[0]},${p[1]
-        }`
-        : `M${p[0]},${p[1]}`
+  const line = P.map((p, i) =>
+    i
+      ? `C${(P[i - 1][0] + p[0]) / 2},${P[i - 1][1]} ${(P[i - 1][0] + p[0]) / 2},${p[1]} ${p[0]},${p[1]}`
+      : `M${p[0]},${p[1]}`
   ).join(' ');
 
   const ticks = Array.from(
-    {
-      length:
-        Math.floor(
-          (top - lo) / 10
-        ) + 1
-    },
+    { length: Math.floor((top - lo) / 10) + 1 },
     (_, i) => lo + i * 10
   );
 
   const a = avg(sc);
+  const step = Math.ceil(data.length / 8);
+  const h = hi != null ? data[hi] : null;
 
-  const step = Math.ceil(
-    data.length / 8
-  );
-
-  const h =
-    hi != null
-      ? data[hi]
-      : null;
-
-  const targetTop = y(
-    targetMax
-  );
-
-  const targetBottom =
-    y(targetMin);
+  const targetTop = y(targetMax);
+  const targetBottom = y(targetMin);
 
   return (
     <div className="chart">
@@ -1785,16 +1293,10 @@ function MockChart({
           <i className="dot blue" />
           Score
         </span>
-
         <span>
           <i className="dot green" />
-          Target{' '}
-          {targetLabel(
-            targetMin,
-            targetMax
-          )}
+          Target {targetLabel(targetMin, targetMax)}
         </span>
-
         <span>
           <i className="dot gray" />
           Average {fmt(a)}
@@ -1805,44 +1307,35 @@ function MockChart({
         viewBox={`0 0 ${W} ${H}`}
         role="img"
         aria-label="Mock score trend"
-        onMouseLeave={() =>
-          setHi(null)
-        }
+        onMouseLeave={() => setHi(null)}
       >
         <rect
           x={L}
           y={targetTop}
           width={iw}
-          height={Math.max(
-            0,
-            targetBottom -
-            targetTop
-          )}
+          height={Math.max(0, targetBottom - targetTop)}
           className="target-band"
         />
 
-        {ticks.map(
-          (v) => (
-            <g key={v}>
-              <line
-                x1={L}
-                x2={W - R}
-                y1={y(v)}
-                y2={y(v)}
-                className="grid"
-              />
-
-              <text
-                x={L - 10}
-                y={y(v) + 4}
-                textAnchor="end"
-                className="axis"
-              >
-                {v}
-              </text>
-            </g>
-          )
-        )}
+        {ticks.map((v) => (
+          <g key={v}>
+            <line
+              x1={L}
+              x2={W - R}
+              y1={y(v)}
+              y2={y(v)}
+              className="grid"
+            />
+            <text
+              x={L - 10}
+              y={y(v) + 4}
+              textAnchor="end"
+              className="axis"
+            >
+              {v}
+            </text>
+          </g>
+        ))}
 
         <line
           x1={L}
@@ -1851,7 +1344,6 @@ function MockChart({
           y2={targetTop}
           className="t-line"
         />
-
         <line
           x1={L}
           x2={W - R}
@@ -1862,18 +1354,11 @@ function MockChart({
 
         <text
           x={W - R}
-          y={Math.max(
-            T + 12,
-            targetTop - 7
-          )}
+          y={Math.max(T + 12, targetTop - 7)}
           textAnchor="end"
           className="target-label"
         >
-          Target{' '}
-          {targetLabel(
-            targetMin,
-            targetMax
-          )}
+          Target {targetLabel(targetMin, targetMax)}
         </text>
 
         <line
@@ -1887,9 +1372,7 @@ function MockChart({
         {data.length > 1 && (
           <path
             key={`a${data.length}`}
-            d={`${line} L${P[P.length - 1][0]
-              },${T + ih} L${P[0][0]
-              },${T + ih}Z`}
+            d={`${line} L${P[P.length - 1][0]},${T + ih} L${P[0][0]},${T + ih}Z`}
             className="s-area"
           />
         )}
@@ -1903,64 +1386,36 @@ function MockChart({
           />
         )}
 
-        {P.map(
-          (p, i) => (
-            <g
-              key={
-                data[i].id
-              }
-            >
-              <circle
-                cx={p[0]}
-                cy={p[1]}
-                r={
-                  hi === i
-                    ? 7
-                    : 5
-                }
-                className="s-dot"
-                style={{
-                  '--i': i
-                }}
-              />
-
-              {i % step === 0 && (
-                <text
-                  x={p[0]}
-                  y={H - 16}
-                  textAnchor="middle"
-                  className="axis"
-                >
-                  {data[i].date.slice(
-                    5
-                  )}
-                </text>
-              )}
-
-              <rect
-                x={
-                  p[0] -
-                  iw /
-                  data.length /
-                  2
-                }
-                y={T}
-                width={
-                  iw /
-                  data.length
-                }
-                height={ih}
-                fill="transparent"
-                onMouseEnter={() =>
-                  setHi(i)
-                }
-                onClick={() =>
-                  setHi(i)
-                }
-              />
-            </g>
-          )
-        )}
+        {P.map((p, i) => (
+          <g key={data[i].id}>
+            <circle
+              cx={p[0]}
+              cy={p[1]}
+              r={hi === i ? 7 : 5}
+              className="s-dot"
+              style={{ '--i': i }}
+            />
+            {i % step === 0 && (
+              <text
+                x={p[0]}
+                y={H - 16}
+                textAnchor="middle"
+                className="axis"
+              >
+                {data[i].date.slice(5)}
+              </text>
+            )}
+            <rect
+              x={p[0] - iw / data.length / 2}
+              y={T}
+              width={iw / data.length}
+              height={ih}
+              fill="transparent"
+              onMouseEnter={() => setHi(i)}
+              onClick={() => setHi(i)}
+            />
+          </g>
+        ))}
 
         {h && (
           <g className="tip">
@@ -1971,22 +1426,13 @@ function MockChart({
               y2={T + ih}
               className="guide"
             />
-
             <text
-              x={clamp(
-                P[hi][0],
-                90,
-                W - 90
-              )}
-              y={Math.max(
-                16,
-                P[hi][1] - 14
-              )}
+              x={clamp(P[hi][0], 90, W - 90)}
+              y={Math.max(16, P[hi][1] - 14)}
               textAnchor="middle"
               className="tip-text"
             >
-              {h.name} ·{' '}
-              {fmt(h.score)}
+              {h.name} · {fmt(h.score)}
             </text>
           </g>
         )}
@@ -1995,264 +1441,161 @@ function MockChart({
   );
 }
 
-function WeekCard({ state }) {
+function WeekCard({ state, setName }) {
   const now = new Date();
-
   const mon = new Date(now);
 
-  mon.setDate(
-    now.getDate() -
-    ((now.getDay() + 6) % 7)
-  );
+  mon.setDate(now.getDate() - ((now.getDay() + 6) % 7));
 
-  const days = Array.from(
-    { length: 7 },
-    (_, i) => {
-      const d = new Date(mon);
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(mon);
+    d.setDate(mon.getDate() + i);
+    const k = ymd(d);
 
-      d.setDate(
-        mon.getDate() + i
-      );
+    return {
+      k,
+      label: 'MTWTFSS'[i],
+      n: state.log[k] || 0,
+      min: state.focus[k] || 0,
+      now: k === today()
+    };
+  });
 
-      const k = ymd(d);
-
-      return {
-        k,
-        label: 'MTWTFSS'[i],
-        n: state.log[k] || 0,
-        min: state.focus[k] || 0,
-        now: k === today()
-      };
-    }
-  );
-
-  const ticks = days.reduce(
-    (a, d) => a + d.n,
-    0
-  );
-
-  const mins = days.reduce(
-    (a, d) => a + d.min,
-    0
-  );
-
+  const ticks = days.reduce((a, d) => a + d.n, 0);
+  const mins = days.reduce((a, d) => a + d.min, 0);
   const goal = state.weekGoal;
-
-  const peak = Math.max(
-    4,
-    ...days.map(
-      (d) => d.n
-    )
-  );
+  const peak = Math.max(4, ...days.map((d) => d.n));
 
   return (
-    <section className="card week">
-      <div className="sec-head">
-        <div>
-          <span className="eyebrow">
-            THIS WEEK
-          </span>
-          <h2>
-            Weekly goal
-          </h2>
+    <div className="week-wrap">
+      <section className="card week">
+        <div className="sec-head">
+          <div>
+            <span className="eyebrow">THIS WEEK</span>
+            <h2>Weekly goal</h2>
+          </div>
         </div>
-      </div>
 
-      <div className="week-top">
-        <Ring
-          value={pct(
-            ticks,
-            goal
-          )}
-          size={96}
-          stroke={10}
-          color={
-            ticks >= goal
-              ? 'var(--green)'
-              : 'var(--navy)'
-          }
-        />
-
-        <div>
-          <strong>
-            <Count to={ticks} /> /{' '}
-            {goal}
-          </strong>
-
-          <span>
-            ticks this week
-          </span>
-
-          <em>
-            {hm(mins)} focused
-          </em>
-        </div>
-      </div>
-
-      <div className="cols">
-        {days.map((d) => (
-          <Col
-            key={d.k}
-            pct={(d.n / peak) * 100}
-            label={d.label}
-            on={d.now}
-            title={`${d.k}: ${d.n} ticks`}
+        <div className="week-top">
+          <Ring
+            value={pct(ticks, goal)}
+            size={96}
+            stroke={10}
+            color={ticks >= goal ? 'var(--green)' : 'var(--navy)'}
           />
-        ))}
-      </div>
-    </section>
+          <div>
+            <strong>
+              <Count to={ticks} /> / {goal}
+            </strong>
+            <span>ticks this week</span>
+            <em>{hm(mins)} focused</em>
+          </div>
+        </div>
+
+        <div className="cols">
+          {days.map((d) => (
+            <Col
+              key={d.k}
+              pct={(d.n / peak) * 100}
+              label={d.label}
+              on={d.now}
+              title={`${d.k}: ${d.n} ticks`}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="card doit">
+        
+
+        <h2 className="doit-big">
+          <span>Do it,</span>
+          <input
+            className="doit-name"
+            value={state.name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="your name"
+            maxLength={24}
+            size={Math.max(state.name.length, 8)}
+            aria-label="Your name (editable)"
+            spellCheck={false}
+          />
+        </h2>
+
+        <p className="doit-line">
+          Show up today. Your future self is counting on it.
+        </p>
+      </section>
+    </div>
   );
 }
 
-function Dashboard({
-  state,
-  go,
-  toggleLearn,
-  streak
-}) {
+function Dashboard({ state, go, toggleLearn, streak, setName }) {
   const m = overall(state);
-
-  const left = daysLeft(
-    state.exam
-  );
-
-  const todayTicks =
-    state.log[today()] || 0;
-
-  const focusToday =
-    state.focus[today()] || 0;
-
-  const toLearn =
-    m.total - m.learn;
-
-  const pace =
-    left > 0
-      ? toLearn / left
-      : toLearn;
+  const left = daysLeft(state.exam);
+  const todayTicks = state.log[today()] || 0;
+  const focusToday = state.focus[today()] || 0;
+  const toLearn = m.total - m.learn;
+  const pace = left > 0 ? toLearn / left : toLearn;
 
   const overallR = useMemo(() => {
     const totalW =
-      NAMES.reduce(
-        (a, n) =>
-          a +
-          (state.weights[n] ||
-            0),
-        0
-      ) || 1;
+      NAMES.reduce((a, n) => a + (state.weights[n] || 0), 0) || 1;
 
-    const sum =
-      NAMES.reduce(
-        (a, n) =>
-          a +
-          metrics(
-            state.subjects[n],
-            n
-          ).readiness *
-          (state.weights[n] ||
-            0),
-        0
-      );
-
-    return Math.round(
-      sum / totalW
+    const sum = NAMES.reduce(
+      (a, n) =>
+        a +
+        metrics(state.subjects[n], n).readiness * (state.weights[n] || 0),
+      0
     );
-  }, [
-    state.subjects,
-    state.weights
-  ]);
+
+    return Math.round(sum / totalW);
+  }, [state.subjects, state.weights]);
 
   const next = useMemo(() => {
-    const cand =
-      NAMES.flatMap(
-        (n) => {
-          const d =
-            state.subjects[n];
+    const cand = NAMES.flatMap((n) => {
+      const d = state.subjects[n];
+      const r = metrics(d, n).readiness;
 
-          const r =
-            metrics(
-              d,
-              n
-            ).readiness;
+      return SUBJECTS[n].topics
+        .map((t, i) => ({
+          n,
+          t,
+          i,
+          r,
+          weak: d.weak[i],
+          done: d.learn[i]
+        }))
+        .filter((c) => !c.done);
+    });
 
-          return SUBJECTS[
-            n
-          ].topics
-            .map(
-              (t, i) => ({
-                n,
-                t,
-                i,
-                r,
-                weak: d.weak[i],
-                done: d.learn[i]
-              })
-            )
-            .filter(
-              (c) => !c.done
-            );
-        }
-      );
-
-    const weak =
-      cand.filter(
-        (c) => c.weak
-      );
-
+    const weak = cand.filter((c) => c.weak);
     const seen = new Set();
     const rest = [];
 
     cand
-      .filter(
-        (c) => !c.weak
-      )
-      .sort(
-        (a, b) =>
-          a.r - b.r ||
-          a.i - b.i
-      )
-      .forEach(
-        (c) => {
-          if (
-            !seen.has(c.n)
-          ) {
-            seen.add(c.n);
-            rest.push(c);
-          }
+      .filter((c) => !c.weak)
+      .sort((a, b) => a.r - b.r || a.i - b.i)
+      .forEach((c) => {
+        if (!seen.has(c.n)) {
+          seen.add(c.n);
+          rest.push(c);
         }
-      );
+      });
 
-    return [
-      ...weak,
-      ...rest
-    ].slice(0, 5);
+    return [...weak, ...rest].slice(0, 5);
   }, [state.subjects]);
 
   return (
     <>
-      <section
-        className="admit"
-        aria-label="Exam overview"
-      >
+      <section className="admit" aria-label="Exam overview">
         <div className="admit-main">
-          <span className="admit-k">
-            Exam in
-          </span>
-
+          <span className="admit-k">Exam in</span>
           <strong className="admit-days">
-            <Count
-              to={left}
-              dur={1.4}
-            />
-            <small>
-              days
-            </small>
+            <Count to={left} dur={1.4} />
+            <small>days</small>
           </strong>
-
-          <em>
-            {longDate(
-              state.exam
-            )}
-          </em>
+          <em>{longDate(state.exam)}</em>
         </div>
 
         <div className="admit-ring">
@@ -2263,127 +1606,63 @@ function Dashboard({
             label="overall"
             variant="risk"
           />
-
-          <span>
-            Overall readiness
-          </span>
+          <span>Overall readiness</span>
         </div>
 
         <div className="admit-cells">
           <div className="adm-item">
-            <span>
-              Target range
-            </span>
-
-            <b>
-              {targetLabel(
-                state.targetMin,
-                state.targetMax
-              )}
-            </b>
-
-            <em>
-              marks out of 100
-            </em>
+            <span>Target range</span>
+            <b>{targetLabel(state.targetMin, state.targetMax)}</b>
+            <em>marks out of 100</em>
           </div>
 
           <div className="adm-item">
-            <span>
-              Study progress
-            </span>
-
+            <span>Study progress</span>
             <b>
-              <Count
-                to={m.progress}
-              />
-              %
+              <Count to={m.progress} />%
             </b>
-
-            <Bar
-              value={m.progress}
-              tone="blue"
-            />
+            <Bar value={m.progress} tone="blue" />
           </div>
 
           <div className="adm-item">
-            <span>
-              Mock average
-            </span>
-
-            <b>
-              {m.mockAvg == null
-                ? '—'
-                : fmt(
-                  m.mockAvg
-                )}
-            </b>
-
+            <span>Mock average</span>
+            <b>{m.mockAvg == null ? '—' : fmt(m.mockAvg)}</b>
             <em>
               {m.mockAvg == null
                 ? 'no mocks logged'
-                : targetStatus(
-                  m.mockAvg,
-                  state.targetMin,
-                  state.targetMax
-                )}
+                : targetStatus(m.mockAvg, state.targetMin, state.targetMax)}
             </em>
           </div>
 
           <div className="adm-item">
-            <span>
-              Streak
-            </span>
-
+            <span>Streak</span>
             <b>
-              <Count
-                to={streak}
-              />
+              <Count to={streak} />
               <small>d</small>
             </b>
-
             <em>
-              {streak
-                ? 'keep it going'
-                : 'tick a topic to start'}
+              {streak ? 'keep it going' : 'tick a topic to start'}
             </em>
           </div>
 
           <div className="adm-item">
-            <span>
-              Today
-            </span>
-
+            <span>Today</span>
             <b>
-              <Count
-                to={todayTicks}
-              />
+              <Count to={todayTicks} />
             </b>
-
             <em>
-              {todayTicks === 1
-                ? 'tick'
-                : 'ticks'}{' '}
-              · {hm(focusToday)}{' '}
-              focus
+              {todayTicks === 1 ? 'tick' : 'ticks'} · {hm(focusToday)} focus
             </em>
           </div>
 
           <div className="adm-item">
-            <span>
-              Topics left
-            </span>
-
+            <span>Topics left</span>
             <b>
-              <Count
-                to={toLearn}
-              />
+              <Count to={toLearn} />
             </b>
-
             <em>
               {toLearn
-                ? `≈ ${pace.toFixed(
-                  1
-                )}/day to finish`
+                ? `≈ ${pace.toFixed(1)}/day to finish`
                 : 'all topics learned'}
             </em>
           </div>
@@ -2395,35 +1674,26 @@ function Dashboard({
           label="Learned"
           value={`${m.lp}%`}
           detail={`${m.learn}/${m.total} topics`}
-          icon={
-            <Icon name="book" />
-          }
+          icon={<Icon name="book" />}
           pctValue={m.lp}
           tone="blue"
         />
-
         <Stat
           label="PYQs solved"
           value={`${m.pp}%`}
           detail={`${m.pyq}/${m.total} topics`}
-          icon={
-            <Icon name="check" />
-          }
+          icon={<Icon name="check" />}
           pctValue={m.pp}
           tone="teal"
         />
-
         <Stat
           label="Revised"
           value={`${m.rp}%`}
           detail={`${m.rev}/${m.total} topics`}
-          icon={
-            <Icon name="rotate" />
-          }
+          icon={<Icon name="rotate" />}
           pctValue={m.rp}
           tone="green"
         />
-
         <Stat
           label="Weak topics"
           value={m.weak}
@@ -2432,9 +1702,7 @@ function Dashboard({
               ? 'starred for extra attention'
               : 'none starred yet'
           }
-          icon={
-            <Icon name="star" />
-          }
+          icon={<Icon name="star" />}
           tone="amber"
         />
       </div>
@@ -2443,127 +1711,66 @@ function Dashboard({
         <section className="card">
           <div className="sec-head">
             <div>
-              <span className="eyebrow">
-                SUGGESTED NEXT
-              </span>
-              <h2>
-                Pick up where you
-                left off
-              </h2>
+              <span className="eyebrow">SUGGESTED NEXT</span>
+              <h2>Pick up where you left off</h2>
             </div>
-
-            <button
-              className="link"
-              onClick={() =>
-                go('subjects')
-              }
-            >
+            <button className="link" onClick={() => go('subjects')}>
               All subjects
-              <Icon
-                name="arrow"
-                size={14}
-              />
+              <Icon name="arrow" size={14} />
             </button>
           </div>
 
           <div className="next">
             {next.map((r) => (
-              <label
-                key={`${r.n}-${r.i}`}
-                className="next-item"
-              >
+              <label key={`${r.n}-${r.i}`} className="next-item">
                 <input
                   type="checkbox"
                   checked={false}
-                  onChange={() =>
-                    toggleLearn(
-                      r.n,
-                      r.i
-                    )
-                  }
+                  onChange={() => toggleLearn(r.n, r.i)}
                 />
-
                 <div>
-                  <strong>
-                    {r.t}
-                  </strong>
-
+                  <strong>{r.t}</strong>
                   <span>
-                    {r.n}{' '}
-                    <i>·</i>{' '}
-                    {r.weak
-                      ? 'marked weak'
-                      : `${r.r}% tracker readiness`}
+                    {r.n} <i>·</i>{' '}
+                    {r.weak ? 'marked weak' : `${r.r}% tracker readiness`}
                   </span>
                 </div>
-
-                <Icon
-                  name={
-                    r.weak
-                      ? 'star'
-                      : 'arrow'
-                  }
-                  size={15}
-                />
+                <Icon name={r.weak ? 'star' : 'arrow'} size={15} />
               </label>
             ))}
 
             {!next.length && (
               <div className="empty">
-                <strong>
-                  Syllabus complete
-                </strong>
-                <span>
-                  Shift to PYQs and
-                  revision.
-                </span>
+                <strong>Syllabus complete</strong>
+                <span>Shift to PYQs and revision.</span>
               </div>
             )}
           </div>
         </section>
 
-        <WeekCard
-          state={state}
-        />
+        <WeekCard state={state} setName={setName} />
       </div>
 
       <div className="grid2">
         <section className="card">
           <div className="sec-head">
             <div>
-              <span className="eyebrow">
-                SYLLABUS SNAPSHOT
-              </span>
-              <h2>
-                Balance across
-                areas
-              </h2>
+              <span className="eyebrow">SYLLABUS SNAPSHOT</span>
+              <h2>Balance across areas</h2>
             </div>
-
             <p>
-              Readiness is a
-              tracker metric, not
-              an exam score
-              estimate.
+              Readiness is a tracker metric, not an exam score estimate.
             </p>
           </div>
-
-          <RoseChart
-            state={state}
-          />
+          <RoseChart state={state} />
         </section>
 
         <section className="card">
           <div className="sec-head">
             <div>
-              <span className="eyebrow">
-                SYLLABUS COVERAGE
-              </span>
-              <h2>
-                Readiness by area
-              </h2>
+              <span className="eyebrow">SYLLABUS COVERAGE</span>
+              <h2>Readiness by area</h2>
             </div>
-
             <a
               className="text-link"
               href={SYLLABUS_URL}
@@ -2571,38 +1778,24 @@ function Dashboard({
               rel="noreferrer"
             >
               Official syllabus
-              <Icon
-                name="external"
-                size={13}
-              />
+              <Icon name="external" size={13} />
             </a>
           </div>
 
-          <ReadinessByArea
-            state={state}
-          />
+          <ReadinessByArea state={state} />
 
           <div className="paper-split">
             <div>
               <b>15</b>
-              <span>
-                General Aptitude
-              </span>
+              <span>General Aptitude</span>
             </div>
-
             <div>
               <b>85</b>
-              <span>
-                Technical subjects
-                (CS &amp; IT)
-              </span>
+              <span>Technical subjects (CS &amp; IT)</span>
             </div>
-
             <div className="total">
               <b>100</b>
-              <span>
-                Total marks
-              </span>
+              <span>Total marks</span>
             </div>
           </div>
         </section>
@@ -2611,268 +1804,127 @@ function Dashboard({
       <section className="card activity-card">
         <div className="sec-head">
           <div>
-            <span className="eyebrow">
-              ACTIVITY
-            </span>
-            <h2>
-              Consistency
-            </h2>
+            <span className="eyebrow">ACTIVITY</span>
+            <h2>Consistency</h2>
           </div>
-
-          <p>
-            Ticks from learning,
-            PYQs, and revision.
-          </p>
+          <p>Ticks from learning, PYQs, and revision.</p>
         </div>
-
-        <Heatmap
-          log={state.log}
-        />
+        <Heatmap log={state.log} />
       </section>
     </>
   );
 }
 
-const SubjectCard = memo(
-  function SubjectCard({
-    name,
-    data,
-    q,
-    filter,
-    onToggle,
-    onWeak,
-    onBulk
-  }) {
-    const m = metrics(
-      data,
-      name
-    );
-
-    const byName =
-      name
-        .toLowerCase()
-        .includes(q);
-
-    const show =
-      SUBJECTS[name].topics
-        .map((t, i) => i)
-        .filter(
-          (i) =>
-            (byName ||
-              SUBJECTS[
-                name
-              ].topics[i]
-                .toLowerCase()
-                .includes(q)) &&
-            (filter === 'all' ||
-              (filter ===
-                'pending' &&
-                !data.learn[i]) ||
-              (filter ===
-                'weak' &&
-                data.weak[i]))
-        );
-
-    if (
-      !show.length &&
-      (q || filter !== 'all')
-    ) {
-      return null;
-    }
-
-    return (
-      <section
-        className="card subj colored"
-        style={colorVar(name)}
-      >
-        <div className="subj-head">
-          <Ring
-            value={m.readiness}
-            size={68}
-            stroke={7}
-            color={
-              SUBJECT_COLORS[
-              name
-              ]
-            }
-          />
-
-          <div>
-            <h3>{name}</h3>
-
-            <span className="muted">
-              {m.readiness}% ready
-              {m.weak
-                ? ` · ${m.weak} weak`
-                : ''}
-            </span>
-          </div>
-
-          <button
-            type="button"
-            className="ghost"
-            disabled={!m.learn}
-            onClick={() =>
-              onBulk(
-                name,
-                false
-              )
-            }
-          >
-            Clear all
-          </button>
-        </div>
-
-        <div className="mini">
-          <div>
-            <span>
-              Learn{' '}
-              <b>
-                {m.learn}/
-                {m.total}
-              </b>
-            </span>
-
-            <Bar
-              value={m.lp}
-              color={
-                SUBJECT_COLORS[
-                name
-                ]
-              }
-            />
-          </div>
-
-          <div>
-            <span>
-              PYQ{' '}
-              <b>
-                {m.pyq}/
-                {m.total}
-              </b>
-            </span>
-
-            <Bar
-              value={m.pp}
-              color={
-                SUBJECT_COLORS[
-                name
-                ]
-              }
-            />
-          </div>
-
-          <div>
-            <span>
-              Revision{' '}
-              <b>
-                {m.rev}/
-                {m.total *
-                  REV_ROUNDS}
-              </b>
-            </span>
-
-            <Bar
-              value={m.rp}
-              color={
-                SUBJECT_COLORS[
-                name
-                ]
-              }
-            />
-          </div>
-        </div>
-
-        <div className="topics">
-          {show.map((i) => (
-            <label
-              key={
-                SUBJECTS[
-                  name
-                ].topics[i]
-              }
-              className={`topic ${data.learn[i]
-                  ? 'done'
-                  : ''
-                }`}
-            >
-              <input
-                type="checkbox"
-                checked={
-                  data.learn[i]
-                }
-                onChange={() =>
-                  onToggle(
-                    name,
-                    i
-                  )
-                }
-              />
-
-              <span>
-                {
-                  SUBJECTS[
-                    name
-                  ].topics[i]
-                }
-              </span>
-
-              <button
-                type="button"
-                className={`weak-btn ${data.weak[i]
-                    ? 'on'
-                    : ''
-                  }`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onWeak(
-                    name,
-                    i
-                  );
-                }}
-                aria-pressed={
-                  data.weak[i]
-                }
-                aria-label={
-                  data.weak[i]
-                    ? 'Unmark as weak'
-                    : 'Mark as weak'
-                }
-                title={
-                  data.weak[i]
-                    ? 'Marked weak'
-                    : 'Mark as weak'
-                }
-              >
-                <Icon
-                  name="star"
-                  size={14}
-                />
-              </button>
-            </label>
-          ))}
-        </div>
-      </section>
-    );
-  }
-);
-
-function Subjects({
-  state,
-  toggleLearn,
-  toggleWeak,
-  bulkLearn
+const SubjectCard = memo(function SubjectCard({
+  name,
+  data,
+  q,
+  filter,
+  onToggle,
+  onWeak,
+  onBulk
 }) {
-  const [q, setQ] =
-    useState('');
+  const m = metrics(data, name);
+  const byName = name.toLowerCase().includes(q);
 
-  const [filter, setFilter] =
-    useState('all');
+  const show = SUBJECTS[name].topics
+    .map((t, i) => i)
+    .filter(
+      (i) =>
+        (byName || SUBJECTS[name].topics[i].toLowerCase().includes(q)) &&
+        (filter === 'all' ||
+          (filter === 'pending' && !data.learn[i]) ||
+          (filter === 'weak' && data.weak[i]))
+    );
 
-  const query = q
-    .trim()
-    .toLowerCase();
+  if (!show.length && (q || filter !== 'all')) {
+    return null;
+  }
+
+  return (
+    <section className="card subj colored" style={colorVar(name)}>
+      <div className="subj-head">
+        <Ring
+          value={m.readiness}
+          size={68}
+          stroke={7}
+          color={SUBJECT_COLORS[name]}
+        />
+        <div>
+          <h3>{name}</h3>
+          <span className="muted">
+            {m.readiness}% ready
+            {m.weak ? ` · ${m.weak} weak` : ''}
+          </span>
+        </div>
+        <button
+          type="button"
+          className="ghost"
+          disabled={!m.learn}
+          onClick={() => onBulk(name, false)}
+        >
+          Clear all
+        </button>
+      </div>
+
+      <div className="mini">
+        <div>
+          <span>
+            Learn <b>{m.learn}/{m.total}</b>
+          </span>
+          <Bar value={m.lp} color={SUBJECT_COLORS[name]} />
+        </div>
+        <div>
+          <span>
+            PYQ <b>{m.pyq}/{m.total}</b>
+          </span>
+          <Bar value={m.pp} color={SUBJECT_COLORS[name]} />
+        </div>
+        <div>
+          <span>
+            Revision <b>{m.rev}/{m.total * REV_ROUNDS}</b>
+          </span>
+          <Bar value={m.rp} color={SUBJECT_COLORS[name]} />
+        </div>
+      </div>
+
+      <div className="topics">
+        {show.map((i) => (
+          <label
+            key={SUBJECTS[name].topics[i]}
+            className={`topic ${data.learn[i] ? 'done' : ''}`}
+          >
+            <input
+              type="checkbox"
+              checked={data.learn[i]}
+              onChange={() => onToggle(name, i)}
+            />
+            <span>{SUBJECTS[name].topics[i]}</span>
+            <button
+              type="button"
+              className={`weak-btn ${data.weak[i] ? 'on' : ''}`}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onWeak(name, i);
+              }}
+              aria-pressed={data.weak[i]}
+              aria-label={data.weak[i] ? 'Unmark as weak' : 'Mark as weak'}
+              title={data.weak[i] ? 'Marked weak' : 'Mark as weak'}
+            >
+              <Icon name="star" size={14} />
+            </button>
+          </label>
+        ))}
+      </div>
+    </section>
+  );
+});
+
+function Subjects({ state, toggleLearn, toggleWeak, bulkLearn }) {
+  const [q, setQ] = useState('');
+  const [filter, setFilter] = useState('all');
+  const query = q.trim().toLowerCase();
 
   return (
     <>
@@ -2883,9 +1935,7 @@ function Subjects({
           <input
             className="search"
             value={q}
-            onChange={(e) =>
-              setQ(e.target.value)
-            }
+            onChange={(e) => setQ(e.target.value)}
             placeholder="Search subject or topic"
             aria-label="Search subject or topic"
           />
@@ -2901,26 +1951,16 @@ function Subjects({
           ['all', 'All topics'],
           ['pending', 'Not learned'],
           ['weak', 'Weak only']
-        ].map(
-          ([id, label]) => (
-            <button
-              key={id}
-              className={
-                filter === id
-                  ? 'on'
-                  : ''
-              }
-              aria-pressed={
-                filter === id
-              }
-              onClick={() =>
-                setFilter(id)
-              }
-            >
-              {label}
-            </button>
-          )
-        )}
+        ].map(([id, label]) => (
+          <button
+            key={id}
+            className={filter === id ? 'on' : ''}
+            aria-pressed={filter === id}
+            onClick={() => setFilter(id)}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       <div className="grid-cards">
@@ -2941,11 +1981,7 @@ function Subjects({
   );
 }
 
-function PYQs({
-  state,
-  togglePYQ,
-  bulkPYQ
-}) {
+function PYQs({ state, togglePYQ, bulkPYQ }) {
   const m = overall(state);
 
   return (
@@ -2957,41 +1993,19 @@ function PYQs({
 
       <section className="card banner">
         <div>
-          <h2>
-            {m.pyq}/{m.total} topics
-            solved
-          </h2>
-
+          <h2>{m.pyq}/{m.total} topics solved</h2>
           <p>
-            Kept separate from
-            learning, so a tick
-            here means real
-            practice.
+            Kept separate from learning, so a tick here means real practice.
           </p>
-
-          <Bar
-            value={m.pp}
-            tone="teal"
-          />
+          <Bar value={m.pp} tone="teal" />
         </div>
-
-        <Ring
-          value={m.pp}
-          size={110}
-          stroke={10}
-          label="PYQs"
-        />
+        <Ring value={m.pp} size={110} stroke={10} label="PYQs" />
       </section>
 
       <div className="grid-cards">
         {NAMES.map((n) => {
-          const d =
-            state.subjects[n];
-
-          const done =
-            d.pyq.filter(
-              Boolean
-            ).length;
+          const d = state.subjects[n];
+          const done = d.pyq.filter(Boolean).length;
 
           return (
             <section
@@ -3001,64 +2015,31 @@ function PYQs({
             >
               <div className="sec-head">
                 <h2>{n}</h2>
-
-                <p>
-                  {done}/
-                  {d.pyq.length}{' '}
-                  solved
-                </p>
-
+                <p>{done}/{d.pyq.length} solved</p>
                 <button
                   className="ghost"
                   disabled={!done}
-                  onClick={() =>
-                    bulkPYQ(
-                      n,
-                      false
-                    )
-                  }
+                  onClick={() => bulkPYQ(n, false)}
                 >
                   Clear all
                 </button>
               </div>
 
               <div className="rows">
-                {SUBJECTS[
-                  n
-                ].topics.map(
-                  (t, i) => (
-                    <label
-                      key={t}
-                      className={`row ${d.pyq[i]
-                          ? 'done'
-                          : ''
-                        }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={
-                          d.pyq[i]
-                        }
-                        onChange={() =>
-                          togglePYQ(
-                            n,
-                            i
-                          )
-                        }
-                      />
-
-                      <span>
-                        {t}
-                      </span>
-
-                      <small>
-                        {d.pyq[i]
-                          ? 'Solved'
-                          : 'Pending'}
-                      </small>
-                    </label>
-                  )
-                )}
+                {SUBJECTS[n].topics.map((t, i) => (
+                  <label
+                    key={t}
+                    className={`row ${d.pyq[i] ? 'done' : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={d.pyq[i]}
+                      onChange={() => togglePYQ(n, i)}
+                    />
+                    <span>{t}</span>
+                    <small>{d.pyq[i] ? 'Solved' : 'Pending'}</small>
+                  </label>
+                ))}
               </div>
             </section>
           );
@@ -3068,11 +2049,7 @@ function PYQs({
   );
 }
 
-function Revision({
-  state,
-  toggleRev,
-  bulkRev
-}) {
+function Revision({ state, toggleRev, bulkRev }) {
   const m = overall(state);
 
   return (
@@ -3084,38 +2061,17 @@ function Revision({
 
       <section className="card banner">
         <div>
-          <h2>
-            {m.rev}/{m.total} topics
-            revised
-          </h2>
-
-          <p>
-            Revise a topic once,
-            after you have
-            learned it.
-          </p>
-
-          <Bar
-            value={m.rp}
-            tone="green"
-          />
+          <h2>{m.rev}/{m.total} topics revised</h2>
+          <p>Revise a topic once, after you have learned it.</p>
+          <Bar value={m.rp} tone="green" />
         </div>
-
-        <Ring
-          value={m.rp}
-          size={110}
-          stroke={10}
-          label="revised"
-        />
+        <Ring value={m.rp} size={110} stroke={10} label="revised" />
       </section>
 
       <div className="grid-cards">
         {NAMES.map((n) => {
-          const d =
-            state.subjects[n];
-
-          const sm =
-            metrics(d, n);
+          const d = state.subjects[n];
+          const sm = metrics(d, n);
 
           return (
             <section
@@ -3125,72 +2081,34 @@ function Revision({
             >
               <div className="sec-head">
                 <h2>{n}</h2>
-
-                <p>
-                  {sm.rev}/
-                  {sm.total} revised
-                </p>
-
+                <p>{sm.rev}/{sm.total} revised</p>
                 <button
                   className="ghost"
                   disabled={!sm.rev}
-                  onClick={() =>
-                    bulkRev(
-                      n,
-                      false
-                    )
-                  }
+                  onClick={() => bulkRev(n, false)}
                 >
                   Clear all
                 </button>
               </div>
 
               <div className="rows">
-                {SUBJECTS[
-                  n
-                ].topics.map(
-                  (t, i) => (
-                    <div
-                      key={t}
-                      className={`row rev ${d.rev[i] >=
-                          1
-                          ? 'done'
-                          : ''
-                        }`}
-                    >
-                      <span>
-                        {t}
-                      </span>
-
-                      <div className="rbtns">
-                        <button
-                          className={
-                            d.rev[i] >=
-                              1
-                              ? 'on'
-                              : ''
-                          }
-                          onClick={() =>
-                            toggleRev(
-                              n,
-                              i,
-                              1
-                            )
-                          }
-                          aria-pressed={
-                            d.rev[i] >=
-                            1
-                          }
-                        >
-                          {d.rev[i] >=
-                            1
-                            ? 'Revised'
-                            : 'Revise'}
-                        </button>
-                      </div>
+                {SUBJECTS[n].topics.map((t, i) => (
+                  <div
+                    key={t}
+                    className={`row rev ${d.rev[i] >= 1 ? 'done' : ''}`}
+                  >
+                    <span>{t}</span>
+                    <div className="rbtns">
+                      <button
+                        className={d.rev[i] >= 1 ? 'on' : ''}
+                        onClick={() => toggleRev(n, i, 1)}
+                        aria-pressed={d.rev[i] >= 1}
+                      >
+                        {d.rev[i] >= 1 ? 'Revised' : 'Revise'}
+                      </button>
                     </div>
-                  )
-                )}
+                  </div>
+                ))}
               </div>
             </section>
           );
@@ -3200,115 +2118,43 @@ function Revision({
   );
 }
 
-function Priority({
-  state,
-  addTask
-}) {
+function Priority({ state, addTask }) {
   const rows = useMemo(
     () =>
       NAMES.map((n) => {
-        const w =
-          state.weights[n] ||
-          0;
+        const w = state.weights[n] || 0;
+        const m = metrics(state.subjects[n], n);
+        const risk = +(w * (1 - m.readiness / 100)).toFixed(1);
+        const act = nextAction(state, n);
 
-        const m = metrics(
-          state.subjects[n],
-          n
-        );
-
-        const risk = +(
-          w *
-          (1 -
-            m.readiness / 100)
-        ).toFixed(1);
-
-        const act = nextAction(
-          state,
-          n
-        );
-
-        return {
-          n,
-          w,
-          m,
-          risk,
-          act
-        };
-      }).sort(
-        (a, b) =>
-          b.w - a.w
-      ),
-    [
-      state.subjects,
-      state.weights
-    ]
+        return { n, w, m, risk, act };
+      }).sort((a, b) => b.w - a.w),
+    [state.subjects, state.weights]
   );
 
-  const totalW = +rows
-    .reduce(
-      (a, x) =>
-        a + x.w,
-      0
-    )
-    .toFixed(1);
-
-  const top3W = +rows
-    .slice(0, 3)
-    .reduce(
-      (a, x) =>
-        a + x.w,
-      0
-    )
-    .toFixed(1);
-
-  const totalRisk = +rows
-    .reduce(
-      (a, x) =>
-        a + x.risk,
-      0
-    )
-    .toFixed(1);
-
-  const riskiest = [
-    ...rows
-  ].sort(
-    (a, b) =>
-      b.risk - a.risk
-  )[0];
-
+  const totalW = +rows.reduce((a, x) => a + x.w, 0).toFixed(1);
+  const top3W = +rows.slice(0, 3).reduce((a, x) => a + x.w, 0).toFixed(1);
+  const totalRisk = +rows.reduce((a, x) => a + x.risk, 0).toFixed(1);
+  const riskiest = [...rows].sort((a, b) => b.risk - a.risk)[0];
   const avgReady = Math.round(
-    rows.reduce(
-      (a, x) =>
-        a + x.m.readiness,
-      0
-    ) / rows.length
+    rows.reduce((a, x) => a + x.m.readiness, 0) / rows.length
   );
 
   const tiers = [
     {
-      label:
-        'High weightage',
-      hint:
-        '9+ marks each — these carry higher marks weight in this tracker.',
-      test: (x) =>
-        x.w >= 9
+      label: 'High weightage',
+      hint: '9+ marks each — these carry higher marks weight in this tracker.',
+      test: (x) => x.w >= 9
     },
     {
-      label:
-        'Medium weightage',
-      hint:
-        '6 to 8 marks each — cover after the top tier.',
-      test: (x) =>
-        x.w >= 6 &&
-        x.w < 9
+      label: 'Medium weightage',
+      hint: '6 to 8 marks each — cover after the top tier.',
+      test: (x) => x.w >= 6 && x.w < 9
     },
     {
-      label:
-        'Lower weightage',
-      hint:
-        'Under 6 marks each — finish, but do not over-invest.',
-      test: (x) =>
-        x.w < 6
+      label: 'Lower weightage',
+      hint: 'Under 6 marks each — finish, but do not over-invest.',
+      test: (x) => x.w < 6
     }
   ];
 
@@ -3322,167 +2168,87 @@ function Priority({
       <div className="grid4">
         <Stat
           label="Study first"
-          value={
-            rows[0]?.n || '—'
-          }
-          detail={`Top 3 carry ${top3W}/${totalW} marks (${pct(
-            top3W,
-            totalW
-          )}%)`}
-          icon={
-            <Icon name="flag" />
-          }
+          value={rows[0]?.n || '—'}
+          detail={`Top 3 carry ${top3W}/${totalW} marks (${pct(top3W, totalW)}%)`}
+          icon={<Icon name="flag" />}
           tone="blue"
         />
-
         <Stat
           label="Marks at risk"
           value={totalRisk}
           detail="weight × (1 − readiness)"
-          icon={
-            <Icon name="chart" />
-          }
-          pctValue={pct(
-            totalRisk,
-            totalW
-          )}
+          icon={<Icon name="chart" />}
+          pctValue={pct(totalRisk, totalW)}
           tone="amber"
         />
-
         <Stat
           label="Biggest opportunity"
-          value={
-            riskiest?.n ||
-            '—'
-          }
-          detail={
-            riskiest
-              ? `${riskiest.risk} marks at risk`
-              : ''
-          }
-          icon={
-            <Icon name="star" />
-          }
+          value={riskiest?.n || '—'}
+          detail={riskiest ? `${riskiest.risk} marks at risk` : ''}
+          icon={<Icon name="star" />}
           tone="green"
         />
-
         <Stat
           label="Average readiness"
           value={`${avgReady}%`}
           detail="across all subjects"
-          icon={
-            <Icon name="rotate" />
-          }
+          icon={<Icon name="rotate" />}
           pctValue={avgReady}
           tone="teal"
         />
       </div>
 
       {tiers.map((t) => {
-        const list =
-          rows.filter(
-            t.test
-          );
-
-        if (!list.length)
-          return null;
+        const list = rows.filter(t.test);
+        if (!list.length) return null;
 
         return (
-          <section
-            className="card"
-            key={t.label}
-          >
+          <section className="card" key={t.label}>
             <div className="tier-head">
-              <h2>
-                {t.label}
-              </h2>
-
-              <p>
-                {t.hint}
-              </p>
+              <h2>{t.label}</h2>
+              <p>{t.hint}</p>
             </div>
 
             <div className="pri-rows">
-              {list.map(
-                (x) => (
-                  <div
-                    className="pri-row"
-                    key={x.n}
-                  >
-                    <span className="pri-rank">
-                      #
-                      {
-                        rows.indexOf(
-                          x
-                        ) + 1
-                      }
+              {list.map((x) => (
+                <div className="pri-row" key={x.n}>
+                  <span className="pri-rank">
+                    #{rows.indexOf(x) + 1}
+                  </span>
+                  <div className="pri-main">
+                    <strong>{x.n}</strong>
+                    <span className="muted">
+                      {x.w} marks · {x.m.readiness}% ready
+                      {x.act ? ` · Next: ${x.act.topic}` : ''}
                     </span>
-
-                    <div className="pri-main">
-                      <strong>
-                        {x.n}
-                      </strong>
-
-                      <span className="muted">
-                        {x.w}{' '}
-                        marks ·{' '}
-                        {
-                          x.m
-                            .readiness
-                        }
-                        % ready
-                        {x.act
-                          ? ` · Next: ${x.act.topic}`
-                          : ''}
-                      </span>
-
-                      <Bar
-                        value={
-                          x.m
-                            .readiness
-                        }
-                        color={
-                          SUBJECT_COLORS[
-                          x.n
-                          ]
-                        }
-                      />
-                    </div>
-
-                    <span className="pri-risk">
-                      {x.risk}{' '}
-                      at risk
-                    </span>
-
-                    {x.act ? (
-                      <button
-                        className="ghost"
-                        onClick={() =>
-                          addTask(
-                            x.n,
-                            x.act.idx,
-                            x.act.kind,
-                            labelFor(
-                              x.n,
-                              x.act
-                            )
-                          )
-                        }
-                      >
-                        Add to today
-                      </button>
-                    ) : (
-                      <span className="tag-done">
-                        <Icon
-                          name="check"
-                          size={13}
-                        />
-                        Done
-                      </span>
-                    )}
+                    <Bar
+                      value={x.m.readiness}
+                      color={SUBJECT_COLORS[x.n]}
+                    />
                   </div>
-                )
-              )}
+                  <span className="pri-risk">{x.risk} at risk</span>
+                  {x.act ? (
+                    <button
+                      className="ghost"
+                      onClick={() =>
+                        addTask(
+                          x.n,
+                          x.act.idx,
+                          x.act.kind,
+                          labelFor(x.n, x.act)
+                        )
+                      }
+                    >
+                      Add to today
+                    </button>
+                  ) : (
+                    <span className="tag-done">
+                      <Icon name="check" size={13} />
+                      Done
+                    </span>
+                  )}
+                </div>
+              ))}
             </div>
           </section>
         );
@@ -3491,59 +2257,22 @@ function Priority({
   );
 }
 
-function Plan({
-  state,
-  toggleTask,
-  regenerate
-}) {
-  const tasks =
-    state.tasks;
+function Plan({ state, toggleTask, regenerate }) {
+  const tasks = state.tasks;
+  const done = tasks.filter((t) => t.done).length;
+  const left = daysLeft(state.exam);
 
-  const done =
-    tasks.filter(
-      (t) => t.done
-    ).length;
-
-  const left =
-    daysLeft(state.exam);
-
-  const learnLeft =
-    NAMES.reduce(
-      (a, n) =>
-        a +
-        state.subjects[
-          n
-        ].learn.filter(
-          (v) => !v
-        ).length,
-      0
-    );
-
-  const p1 = Math.max(
-    1,
-    Math.round(
-      left * 0.5
-    )
+  const learnLeft = NAMES.reduce(
+    (a, n) => a + state.subjects[n].learn.filter((v) => !v).length,
+    0
   );
 
-  const p2 = Math.max(
+  const p1 = Math.max(1, Math.round(left * 0.5));
+  const p2 = Math.max(1, Math.round(left * 0.35));
+  const perWeek = Math.max(
     1,
-    Math.round(
-      left * 0.35
-    )
+    Math.ceil(learnLeft / Math.max(p1 / 7, 1))
   );
-
-  const perWeek =
-    Math.max(
-      1,
-      Math.ceil(
-        learnLeft /
-        Math.max(
-          p1 / 7,
-          1
-        )
-      )
-    );
 
   const phases = [
     {
@@ -3572,10 +2301,7 @@ function Plan({
         title="Study Plan"
         sub={`${done}/${tasks.length} tasks done today`}
         action={
-          <button
-            className="primary"
-            onClick={regenerate}
-          >
+          <button className="primary" onClick={regenerate}>
             Refresh tasks
           </button>
         }
@@ -3584,68 +2310,34 @@ function Plan({
       <section className="card">
         <div className="sec-head">
           <div>
-            <span className="eyebrow">
-              TODAY
-            </span>
-
-            <h2>
-              Priority-ordered
-              tasks
-            </h2>
+            <span className="eyebrow">TODAY</span>
+            <h2>Priority-ordered tasks</h2>
           </div>
-
-          <p>
-            Ticking a task also
-            updates the matching
-            topic.
-          </p>
+          <p>Ticking a task also updates the matching topic.</p>
         </div>
 
         <div className="next">
           {tasks.map((t) => (
-            <label
-              key={t.id}
-              className="next-item"
-            >
+            <label key={t.id} className="next-item">
               <input
                 type="checkbox"
                 checked={t.done}
-                onChange={() =>
-                  toggleTask(
-                    t.id
-                  )
-                }
+                onChange={() => toggleTask(t.id)}
               />
-
               <div>
-                <strong
-                  className={
-                    t.done
-                      ? 'done-text'
-                      : ''
-                  }
-                >
+                <strong className={t.done ? 'done-text' : ''}>
                   {t.label}
                 </strong>
-
-                <span>
-                  {t.name}
-                </span>
+                <span>{t.name}</span>
               </div>
             </label>
           ))}
 
           {!tasks.length && (
             <div className="empty">
-              <strong>
-                No tasks yet
-              </strong>
-
+              <strong>No tasks yet</strong>
               <span>
-                Click “Refresh
-                tasks” to build
-                today’s plan from
-                Priority.
+                Click “Refresh tasks” to build today’s plan from Priority.
               </span>
             </div>
           )}
@@ -3655,48 +2347,23 @@ function Plan({
       <section className="card">
         <div className="sec-head">
           <div>
-            <span className="eyebrow">
-              ROADMAP
-            </span>
-
-            <h2>
-              {left} days to exam
-            </h2>
+            <span className="eyebrow">ROADMAP</span>
+            <h2>{left} days to exam</h2>
           </div>
         </div>
 
         <div className="roadmap">
-          {phases.map(
-            (p) => (
-              <div
-                className="road-row"
-                key={p.name}
-              >
-                <div>
-                  <strong>
-                    {p.name}
-                  </strong>
-
-                  <span className="muted">
-                    {p.note}
-                  </span>
-                </div>
-
-                <span className="tag-date">
-                  Day {p.from + 1}–
-                  {Math.max(
-                    p.to,
-                    p.from + 1
-                  )}{' '}
-                  of{' '}
-                  {Math.max(
-                    left,
-                    1
-                  )}
-                </span>
+          {phases.map((p) => (
+            <div className="road-row" key={p.name}>
+              <div>
+                <strong>{p.name}</strong>
+                <span className="muted">{p.note}</span>
               </div>
-            )
-          )}
+              <span className="tag-date">
+                Day {p.from + 1}–{Math.max(p.to, p.from + 1)} of {Math.max(left, 1)}
+              </span>
+            </div>
+          ))}
         </div>
       </section>
     </>
@@ -3714,97 +2381,37 @@ function Focus({
   pause,
   stop
 }) {
-  const idle =
-    !running &&
-    !timer.paused;
-
-  const total =
-    timer.mins * 60;
-
-  const done = clamp(
-    1 -
-    secsLeft /
-    total,
-    0,
-    1
-  );
+  const idle = !running && !timer.paused;
+  const total = timer.mins * 60;
+  const done = clamp(1 - secsLeft / total, 0, 1);
 
   const R = 118;
-
-  const len =
-    2 * Math.PI * R;
-
+  const len = 2 * Math.PI * R;
   const t = today();
 
-  const days = Array.from(
-    { length: 7 },
-    (_, i) => {
-      const d =
-        new Date();
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    const k = ymd(d);
 
-      d.setDate(
-        d.getDate() -
-        (6 - i)
-      );
+    return {
+      k,
+      label: d.toLocaleDateString('en-IN', { weekday: 'short' }).slice(0, 2),
+      min: state.focus[k] || 0,
+      now: k === t
+    };
+  });
 
-      const k = ymd(d);
+  const peak = Math.max(60, ...days.map((d) => d.min));
+  const weekMin = days.reduce((a, d) => a + d.min, 0);
+  const allMin = Object.values(state.focus).reduce((a, x) => a + x, 0);
 
-      return {
-        k,
-        label: d
-          .toLocaleDateString(
-            'en-IN',
-            {
-              weekday:
-                'short'
-            }
-          )
-          .slice(0, 2),
-        min:
-          state.focus[k] ||
-          0,
-        now: k === t
-      };
-    }
-  );
+  const bySub = Object.entries(state.focusBy)
+    .filter(([, v]) => v > 0)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6);
 
-  const peak = Math.max(
-    60,
-    ...days.map(
-      (d) => d.min
-    )
-  );
-
-  const weekMin =
-    days.reduce(
-      (a, d) =>
-        a + d.min,
-      0
-    );
-
-  const allMin =
-    Object.values(
-      state.focus
-    ).reduce(
-      (a, x) => a + x,
-      0
-    );
-
-  const bySub =
-    Object.entries(
-      state.focusBy
-    )
-      .filter(
-        ([, v]) => v > 0
-      )
-      .sort(
-        (a, b) =>
-          b[1] - a[1]
-      )
-      .slice(0, 6);
-
-  const topSub =
-    bySub[0]?.[1] || 1;
+  const topSub = bySub[0]?.[1] || 1;
 
   return (
     <>
@@ -3816,57 +2423,30 @@ function Focus({
       <div className="grid4">
         <Stat
           label="Today"
-          value={hm(
-            state.focus[t] || 0
-          )}
+          value={hm(state.focus[t] || 0)}
           detail="focused today"
-          icon={
-            <Icon name="timer" />
-          }
+          icon={<Icon name="timer" />}
           tone="blue"
         />
-
         <Stat
           label="Last 7 days"
           value={hm(weekMin)}
-          detail={`${hm(
-            weekMin / 7
-          )} a day on average`}
-          icon={
-            <Icon name="chart" />
-          }
+          detail={`${hm(weekMin / 7)} a day on average`}
+          icon={<Icon name="chart" />}
           tone="teal"
         />
-
         <Stat
           label="All time"
           value={hm(allMin)}
           detail="since you started"
-          icon={
-            <Icon name="book" />
-          }
+          icon={<Icon name="book" />}
           tone="green"
         />
-
         <Stat
           label="Top subject"
-          value={
-            bySub[0]
-              ? SUBJECTS[
-                bySub[0][0]
-              ].short
-              : '—'
-          }
-          detail={
-            bySub[0]
-              ? hm(
-                bySub[0][1]
-              )
-              : 'no sessions yet'
-          }
-          icon={
-            <Icon name="star" />
-          }
+          value={bySub[0] ? SUBJECTS[bySub[0][0]].short : '—'}
+          detail={bySub[0] ? hm(bySub[0][1]) : 'no sessions yet'}
+          icon={<Icon name="star" />}
           tone="amber"
         />
       </div>
@@ -3877,9 +2457,7 @@ function Focus({
             <svg
               viewBox="0 0 280 280"
               role="img"
-              aria-label={`${clock(
-                secsLeft
-              )} remaining`}
+              aria-label={`${clock(secsLeft)} remaining`}
             >
               <circle
                 cx="140"
@@ -3889,7 +2467,6 @@ function Focus({
                 fill="none"
                 strokeWidth="12"
               />
-
               <circle
                 cx="140"
                 cy="140"
@@ -3898,19 +2475,12 @@ function Focus({
                 fill="none"
                 strokeWidth="12"
                 strokeDasharray={len}
-                strokeDashoffset={
-                  len *
-                  (1 - done)
-                }
+                strokeDashoffset={len * (1 - done)}
                 transform="rotate(-90 140 140)"
               />
             </svg>
-
             <div className="timer-c">
-              <b>
-                {clock(secsLeft)}
-              </b>
-
+              <b>{clock(secsLeft)}</b>
               <span>
                 {running
                   ? 'Focusing'
@@ -3926,48 +2496,29 @@ function Focus({
             role="group"
             aria-label="Session length"
           >
-            {PRESETS.map(
-              (m) => (
-                <button
-                  key={m}
-                  type="button"
-                  className={`pill ${timer.mins === m
-                      ? 'on'
-                      : ''
-                    }`}
-                  disabled={!idle}
-                  aria-pressed={
-                    timer.mins === m
-                  }
-                  onClick={() =>
-                    setMins(m)
-                  }
-                >
-                  {m}m
-                </button>
-              )
-            )}
+            {PRESETS.map((m) => (
+              <button
+                key={m}
+                type="button"
+                className={`pill ${timer.mins === m ? 'on' : ''}`}
+                disabled={!idle}
+                aria-pressed={timer.mins === m}
+                onClick={() => setMins(m)}
+              >
+                {m}m
+              </button>
+            ))}
           </div>
 
           <select
             className="select"
             value={timer.subject}
-            onChange={(e) =>
-              setSubject(
-                e.target.value
-              )
-            }
+            onChange={(e) => setSubject(e.target.value)}
             aria-label="Subject for this session"
           >
-            <option value="">
-              No subject
-            </option>
-
+            <option value="">No subject</option>
             {NAMES.map((n) => (
-              <option
-                key={n}
-                value={n}
-              >
+              <option key={n} value={n}>
                 {n}
               </option>
             ))}
@@ -3975,40 +2526,20 @@ function Focus({
 
           <div className="timer-actions">
             {running ? (
-              <button
-                className="primary"
-                onClick={pause}
-              >
-                <Icon
-                  name="pause"
-                  size={15}
-                />
+              <button className="primary" onClick={pause}>
+                <Icon name="pause" size={15} />
                 Pause
               </button>
             ) : (
-              <button
-                className="primary"
-                onClick={start}
-              >
-                <Icon
-                  name="play"
-                  size={15}
-                />
-                {timer.paused
-                  ? 'Resume'
-                  : 'Start'}
+              <button className="primary" onClick={start}>
+                <Icon name="play" size={15} />
+                {timer.paused ? 'Resume' : 'Start'}
               </button>
             )}
 
             {!idle && (
-              <button
-                className="ghost"
-                onClick={stop}
-              >
-                <Icon
-                  name="stop"
-                  size={14}
-                />
+              <button className="ghost" onClick={stop}>
+                <Icon name="stop" size={14} />
                 Stop &amp; save
               </button>
             )}
@@ -4018,91 +2549,48 @@ function Focus({
         <section className="card">
           <div className="sec-head">
             <div>
-              <span className="eyebrow">
-                LAST 7 DAYS
-              </span>
-
-              <h2>
-                Focus minutes
-              </h2>
+              <span className="eyebrow">LAST 7 DAYS</span>
+              <h2>Focus minutes</h2>
             </div>
-
-            <p>
-              {hm(weekMin)} this
-              week.
-            </p>
+            <p>{hm(weekMin)} this week.</p>
           </div>
 
           <div className="cols tall">
             {days.map((d) => (
               <Col
                 key={d.k}
-                pct={
-                  (d.min / peak) *
-                  100
-                }
+                pct={(d.min / peak) * 100}
                 label={d.label}
                 on={d.now}
-                title={`${d.k}: ${hm(
-                  d.min
-                )}`}
+                title={`${d.k}: ${hm(d.min)}`}
               />
             ))}
           </div>
 
           <div className="sec-head sub-head">
             <div>
-              <span className="eyebrow">
-                BY SUBJECT
-              </span>
-
-              <h2>
-                Where the time
-                goes
-              </h2>
+              <span className="eyebrow">BY SUBJECT</span>
+              <h2>Where the time goes</h2>
             </div>
           </div>
 
           {bySub.length ? (
             <div className="sub-list">
-              {bySub.map(
-                ([n, v]) => (
-                  <div
-                    className="sub-row"
-                    key={n}
-                    style={colorVar(n)}
-                  >
-                    <span className="r-name">
-                      {n}
-                    </span>
-
-                    <Bar
-                      value={
-                        (v /
-                          topSub) *
-                        100
-                      }
-                      color={
-                        SUBJECT_COLORS[
-                        n
-                        ]
-                      }
-                    />
-
-                    <span className="r-pct">
-                      {hm(v)}
-                    </span>
-                  </div>
-                )
-              )}
+              {bySub.map(([n, v]) => (
+                <div className="sub-row" key={n} style={colorVar(n)}>
+                  <span className="r-name">{n}</span>
+                  <Bar
+                    value={(v / topSub) * 100}
+                    color={SUBJECT_COLORS[n]}
+                  />
+                  <span className="r-pct">{hm(v)}</span>
+                </div>
+              ))}
             </div>
           ) : (
             <div className="empty">
               <span>
-                Pick a subject
-                before a session
-                to see the split
-                here.
+                Pick a subject before a session to see the split here.
               </span>
             </div>
           )}
@@ -4112,67 +2600,37 @@ function Focus({
   );
 }
 
-function Tests({
-  state,
-  addMock,
-  deleteMock
-}) {
-  const [f, setF] =
-    useState({
-      name: '',
-      score: '',
-      date: today()
-    });
+function Tests({ state, addMock, deleteMock }) {
+  const [f, setF] = useState({
+    name: '',
+    score: '',
+    date: today()
+  });
 
   const m = overall(state);
-
-  const sorted = [
-    ...state.mocks
-  ].sort(
-    (a, b) =>
-      a.date.localeCompare(
-        b.date
-      )
+  const sorted = [...state.mocks].sort((a, b) =>
+    a.date.localeCompare(b.date)
   );
 
   const best = sorted.length
-    ? Math.max(
-      ...sorted.map(
-        (x) => x.score
-      )
-    )
+    ? Math.max(...sorted.map((x) => x.score))
     : null;
 
-  const latest = sorted.length
-    ? sorted[
-      sorted.length - 1
-    ].score
-    : null;
+  const latest = sorted.length ? sorted[sorted.length - 1].score : null;
 
   const submit = (e) => {
     e.preventDefault();
+    const score = Number(f.score);
 
-    const score = Number(
-      f.score
-    );
-
-    if (
-      !f.name.trim() ||
-      !Number.isFinite(score)
-    ) {
+    if (!f.name.trim() || !Number.isFinite(score)) {
       return;
     }
 
     addMock({
       id: uid(),
       name: f.name.trim(),
-      score: clamp(
-        score,
-        0,
-        100
-      ),
-      date:
-        f.date || today()
+      score: clamp(score, 0, 100),
+      date: f.date || today()
     });
 
     setF({
@@ -4195,164 +2653,88 @@ function Tests({
       <div className="grid4">
         <Stat
           label="Last 3 average"
-          value={
-            m.mockAvg == null
-              ? '—'
-              : fmt(
-                m.mockAvg
-              )
-          }
+          value={m.mockAvg == null ? '—' : fmt(m.mockAvg)}
           detail={`out of 100 · target ${targetLabel(
             state.targetMin,
             state.targetMax
           )}`}
-          icon={
-            <Icon name="chart" />
-          }
+          icon={<Icon name="chart" />}
           tone="blue"
         />
-
         <Stat
           label="Latest"
-          value={
-            latest == null
-              ? '—'
-              : fmt(latest)
-          }
+          value={latest == null ? '—' : fmt(latest)}
           detail={
             latest == null
               ? 'no data'
-              : targetStatus(
-                latest,
-                state.targetMin,
-                state.targetMax
-              )
+              : targetStatus(latest, state.targetMin, state.targetMax)
           }
-          icon={
-            <Icon name="check" />
-          }
+          icon={<Icon name="check" />}
           tone="teal"
         />
-
         <Stat
           label="Best"
-          value={
-            best == null
-              ? '—'
-              : fmt(best)
-          }
+          value={best == null ? '—' : fmt(best)}
           detail="highest mock"
-          icon={
-            <Icon name="rotate" />
-          }
+          icon={<Icon name="rotate" />}
           tone="green"
         />
-
         <Stat
           label="Mocks logged"
-          value={
-            state.mocks.length
-          }
+          value={state.mocks.length}
           detail={`target ${targetLabel(
             state.targetMin,
             state.targetMax
           )}`}
-          icon={
-            <Icon name="book" />
-          }
+          icon={<Icon name="book" />}
           tone="amber"
         />
       </div>
 
       <section className="card">
         <div className="sec-head">
-          <h2>
-            Score trend
-          </h2>
-
+          <h2>Score trend</h2>
           <p>
-            Hover or tap a point
-            for details. The
-            shaded band is your
-            target range.
+            Hover or tap a point for details. The shaded band is your target range.
           </p>
         </div>
-
         <MockChart
           mocks={state.mocks}
-          targetMin={
-            state.targetMin
-          }
-          targetMax={
-            state.targetMax
-          }
+          targetMin={state.targetMin}
+          targetMax={state.targetMax}
         />
       </section>
 
       <section className="card">
         <div className="sec-head">
-          <h2>
-            Log a mock
-          </h2>
-
-          <p>
-            Enter marks out of
-            100 (use your net
-            score).
-          </p>
+          <h2>Log a mock</h2>
+          <p>Enter marks out of 100 (use your net score).</p>
         </div>
 
-        <form
-          className="mock-form"
-          onSubmit={submit}
-        >
+        <form className="mock-form" onSubmit={submit}>
           <input
             value={f.name}
-            onChange={(e) =>
-              setF({
-                ...f,
-                name: e.target
-                  .value
-              })
-            }
+            onChange={(e) => setF({ ...f, name: e.target.value })}
             placeholder="Test name"
             required
           />
-
           <input
             type="number"
             min="0"
             max="100"
             step="0.01"
             value={f.score}
-            onChange={(e) =>
-              setF({
-                ...f,
-                score:
-                  e.target.value
-              })
-            }
+            onChange={(e) => setF({ ...f, score: e.target.value })}
             placeholder="Score"
             required
           />
-
           <input
             type="date"
             value={f.date}
-            onChange={(e) =>
-              setF({
-                ...f,
-                date:
-                  e.target.value
-              })
-            }
+            onChange={(e) => setF({ ...f, date: e.target.value })}
             required
           />
-
-          <button
-            className="primary"
-            type="submit"
-          >
+          <button className="primary" type="submit">
             Add test
           </button>
         </form>
@@ -4360,86 +2742,44 @@ function Tests({
 
       <section className="card">
         <div className="sec-head">
-          <h2>
-            History
-          </h2>
-
-          <p>
-            {sorted.length}{' '}
-            stored in this
-            browser.
-          </p>
+          <h2>History</h2>
+          <p>{sorted.length} stored in this browser.</p>
         </div>
 
         {!sorted.length ? (
           <div className="empty">
-            <span>
-              No tests yet.
-            </span>
+            <span>No tests yet.</span>
           </div>
         ) : (
           <div className="scroll">
             <table>
               <thead>
                 <tr>
-                  <th>
-                    Test
-                  </th>
-
-                  <th>
-                    Date
-                  </th>
-
-                  <th>
-                    Score
-                  </th>
-
+                  <th>Test</th>
+                  <th>Date</th>
+                  <th>Score</th>
                   <th />
                 </tr>
               </thead>
-
               <tbody>
-                {[...sorted]
-                  .reverse()
-                  .map((t) => (
-                    <tr
-                      key={t.id}
-                    >
-                      <td>
-                        {t.name}
-                      </td>
-
-                      <td className="muted">
-                        {t.date}
-                      </td>
-
-                      <td>
-                        <strong>
-                          {fmt(
-                            t.score
-                          )}
-                        </strong>
-                        /100
-                      </td>
-
-                      <td>
-                        <button
-                          className="icon-btn"
-                          onClick={() =>
-                            deleteMock(
-                              t.id
-                            )
-                          }
-                          aria-label={`Delete ${t.name}`}
-                        >
-                          <Icon
-                            name="trash"
-                            size={15}
-                          />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                {[...sorted].reverse().map((t) => (
+                  <tr key={t.id}>
+                    <td>{t.name}</td>
+                    <td className="muted">{t.date}</td>
+                    <td>
+                      <strong>{fmt(t.score)}</strong>/100
+                    </td>
+                    <td>
+                      <button
+                        className="icon-btn"
+                        onClick={() => deleteMock(t.id)}
+                        aria-label={`Delete ${t.name}`}
+                      >
+                        <Icon name="trash" size={15} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -4449,60 +2789,36 @@ function Tests({
   );
 }
 
-function Settings({
-  state,
-  setState,
-  reset
-}) {
-  const [exam, setExam] =
-    useState(state.exam);
-
-  const [targetMin, setTargetMin] =
-    useState(state.targetMin);
-
-  const [targetMax, setTargetMax] =
-    useState(state.targetMax);
-
-  const [weekGoal, setWeekGoal] =
-    useState(state.weekGoal);
-
-  const [weights, setWeights] =
-    useState(state.weights);
-
-  const [msg, setMsg] =
-    useState('');
+function Settings({ state, setState, reset }) {
+  const [exam, setExam] = useState(state.exam);
+  const [targetMin, setTargetMin] = useState(state.targetMin);
+  const [targetMax, setTargetMax] = useState(state.targetMax);
+  const [weekGoal, setWeekGoal] = useState(state.weekGoal);
+  const [weights, setWeights] = useState(state.weights);
+  const [msg, setMsg] = useState('');
 
   const save = (e) => {
     e.preventDefault();
 
     const min = clamp(
-      Number(targetMin) ||
-      DEFAULT_TARGET_MIN,
+      Number(targetMin) || DEFAULT_TARGET_MIN,
       1,
       100
     );
-
     const max = clamp(
-      Number(targetMax) ||
-      DEFAULT_TARGET_MAX,
+      Number(targetMax) || DEFAULT_TARGET_MAX,
       min,
       100
     );
-
     const goal = clamp(
-      Math.round(
-        Number(weekGoal)
-      ) ||
-      DEFAULT_WEEK_GOAL,
+      Math.round(Number(weekGoal)) || DEFAULT_WEEK_GOAL,
       1,
       200
     );
 
     setState((s) => ({
       ...s,
-      exam:
-        exam ||
-        EXAM_DEFAULT,
+      exam: exam || EXAM_DEFAULT,
       targetMin: min,
       targetMax: max,
       weekGoal: goal
@@ -4511,42 +2827,23 @@ function Settings({
     setTargetMin(min);
     setTargetMax(max);
     setWeekGoal(goal);
-
-    setMsg(
-      `Saved. Target range: ${targetLabel(
-        min,
-        max
-      )}.`
-    );
+    setMsg(`Saved. Target range: ${targetLabel(min, max)}.`);
   };
 
   const weightTotal = +NAMES.reduce(
-    (a, n) =>
-      a +
-      (Number(
-        weights[n]
-      ) || 0),
+    (a, n) => a + (Number(weights[n]) || 0),
     0
   ).toFixed(1);
 
-  const saveWeights = (
-    e
-  ) => {
+  const saveWeights = (e) => {
     e.preventDefault();
 
-    const clean =
-      Object.fromEntries(
-        NAMES.map((n) => [
-          n,
-          clamp(
-            Number(
-              weights[n]
-            ) || 0,
-            0,
-            30
-          )
-        ])
-      );
+    const clean = Object.fromEntries(
+      NAMES.map((n) => [
+        n,
+        clamp(Number(weights[n]) || 0, 0, 30)
+      ])
+    );
 
     setState((s) => ({
       ...s,
@@ -4554,93 +2851,41 @@ function Settings({
     }));
 
     setWeights(clean);
-
-    setMsg(
-      'Weightage saved.'
-    );
+    setMsg('Weightage saved.');
   };
 
   const exportData = () => {
-    const a =
-      document.createElement(
-        'a'
-      );
-
-    a.href =
-      URL.createObjectURL(
-        new Blob(
-          [
-            JSON.stringify(
-              state,
-              null,
-              2
-            )
-          ],
-          {
-            type: 'application/json'
-          }
-        )
-      );
-
-    a.download = `gate-tracker-${today()}.json`;
-
-    a.click();
-
-    URL.revokeObjectURL(
-      a.href
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(
+      new Blob([JSON.stringify(state, null, 2)], {
+        type: 'application/json'
+      })
     );
+    a.download = `gate-tracker-${today()}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
   };
 
-  const importData = (
-    e
-  ) => {
-    const file =
-      e.target.files?.[0];
-
+  const importData = (e) => {
+    const file = e.target.files?.[0];
     e.target.value = '';
-
     if (!file) return;
 
-    const r =
-      new FileReader();
-
+    const r = new FileReader();
     r.onload = () => {
       try {
-        const next =
-          normalize(
-            JSON.parse(
-              r.result
-            )
-          );
-
+        const next = normalize(JSON.parse(r.result));
         setState(next);
         setExam(next.exam);
-        setTargetMin(
-          next.targetMin
-        );
-        setTargetMax(
-          next.targetMax
-        );
-        setWeekGoal(
-          next.weekGoal
-        );
-        setWeights(
-          next.weights
-        );
-
-        setMsg(
-          `Backup restored. Target range: ${targetLabel(
-            next.targetMin,
-            next.targetMax
-          )}.`
-        );
+        setTargetMin(next.targetMin);
+        setTargetMax(next.targetMax);
+        setWeekGoal(next.weekGoal);
+        setWeights(next.weights);
+        setMsg(`Backup restored. Target range: ${targetLabel(next.targetMin, next.targetMax)}.`);
       } catch {
-        setMsg(
-          'That file is not a valid backup.'
-        );
+        setMsg('That file is not a valid backup.');
       }
     };
-
     r.readAsText(file);
   };
 
@@ -4654,39 +2899,21 @@ function Settings({
       <section className="card">
         <div className="sec-head">
           <div>
-            <span className="eyebrow">
-              GATE 2027 · IIT MADRAS
-            </span>
-
-            <h2>
-              Exam setup
-            </h2>
+            <span className="eyebrow">GATE 2027 · IIT MADRAS</span>
+            <h2>Exam setup</h2>
           </div>
-
           <p>
-            Official exam dates
-            are 6, 7, 13, 14, 20,
-            and 21 February 2027.
-            Choose the date for
-            your own countdown.
+            Official exam dates are 6, 7, 13, 14, 20, and 21 February 2027. Choose the date for your own countdown.
           </p>
         </div>
 
-        <form
-          className="settings-form"
-          onSubmit={save}
-        >
+        <form className="settings-form" onSubmit={save}>
           <label>
             Exam date
             <input
               type="date"
               value={exam}
-              onChange={(e) =>
-                setExam(
-                  e.target
-                    .value
-                )
-              }
+              onChange={(e) => setExam(e.target.value)}
             />
           </label>
 
@@ -4697,12 +2924,7 @@ function Settings({
               min="1"
               max="100"
               value={targetMin}
-              onChange={(e) =>
-                setTargetMin(
-                  e.target
-                    .value
-                )
-              }
+              onChange={(e) => setTargetMin(e.target.value)}
             />
           </label>
 
@@ -4713,114 +2935,63 @@ function Settings({
               min="1"
               max="100"
               value={targetMax}
-              onChange={(e) =>
-                setTargetMax(
-                  e.target
-                    .value
-                )
-              }
+              onChange={(e) => setTargetMax(e.target.value)}
             />
           </label>
 
           <label>
-            Weekly goal
-            (ticks)
+            Weekly goal (ticks)
             <input
               type="number"
               min="1"
               max="200"
               value={weekGoal}
-              onChange={(e) =>
-                setWeekGoal(
-                  e.target
-                    .value
-                )
-              }
+              onChange={(e) => setWeekGoal(e.target.value)}
             />
           </label>
 
-          <button
-            className="primary"
-            type="submit"
-          >
+          <button className="primary" type="submit">
             Save changes
           </button>
 
           {msg && (
-            <span
-              className="form-msg"
-              role="status"
-            >
+            <span className="form-msg" role="status">
               {msg}
             </span>
           )}
         </form>
 
         <div className="target-preview">
-          <span>
-            Your current target
-            range
-          </span>
-
-          <strong>
-            {targetLabel(
-              targetMin,
-              targetMax
-            )}{' '}
-            marks
-          </strong>
+          <span>Your current target range</span>
+          <strong>{targetLabel(targetMin, targetMax)} marks</strong>
         </div>
       </section>
 
       <section className="card">
         <div className="sec-head">
           <div>
-            <span className="eyebrow">
-              PRIORITY MODEL
-            </span>
-
-            <h2>
-              Subject weightage
-            </h2>
+            <span className="eyebrow">PRIORITY MODEL</span>
+            <h2>Subject weightage</h2>
           </div>
-
           <p>
-            Approximate average
-            marks per paper.
-            Adjust if your own
-            analysis differs.
+            Approximate average marks per paper. Adjust if your own analysis differs.
           </p>
         </div>
 
-        <form
-          className="weight-form"
-          onSubmit={saveWeights}
-        >
+        <form className="weight-form" onSubmit={saveWeights}>
           {NAMES.map((n) => (
-            <label
-              key={n}
-              className="weight-field"
-              title={n}
-            >
-              {
-                SUBJECTS[n]
-                  .short
-              }
-
+            <label key={n} className="weight-field" title={n}>
+              {SUBJECTS[n].short}
               <input
                 type="number"
                 min="0"
                 max="30"
                 step="0.5"
-                value={
-                  weights[n]
-                }
+                value={weights[n]}
                 onChange={(e) =>
                   setWeights({
                     ...weights,
-                    [n]:
-                      e.target
-                        .value
+                    [n]: e.target.value
                   })
                 }
                 aria-label={n}
@@ -4830,12 +3001,7 @@ function Settings({
 
           <div className="weight-actions">
             <span
-              className={`weight-total ${Math.abs(
-                weightTotal -
-                100
-              ) > 0.5
-                  ? 'warn'
-                  : ''
+              className={`weight-total ${Math.abs(weightTotal - 100) > 0.5 ? 'warn' : ''
                 }`}
             >
               Total {weightTotal}/100
@@ -4844,19 +3010,12 @@ function Settings({
             <button
               type="button"
               className="ghost"
-              onClick={() =>
-                setWeights({
-                  ...WEIGHTS
-                })
-              }
+              onClick={() => setWeights({ ...WEIGHTS })}
             >
               Reset to default
             </button>
 
-            <button
-              className="primary"
-              type="submit"
-            >
+            <button className="primary" type="submit">
               Save weightage
             </button>
           </div>
@@ -4865,52 +3024,26 @@ function Settings({
 
       <section className="card source-card">
         <div>
-          <span className="eyebrow">
-            BACKUP
-          </span>
-
-          <h2>
-            Export or restore
-            your data
-          </h2>
-
+          <span className="eyebrow">BACKUP</span>
+          <h2>Export or restore your data</h2>
           <p>
-            Progress lives only
-            in this browser.
-            Download a backup
-            file before clearing
-            site data or
-            switching devices.
+            Progress lives only in this browser. Download a backup file before clearing site data or switching devices.
           </p>
         </div>
 
         <div className="source-links">
-          <button
-            className="link"
-            onClick={
-              exportData
-            }
-          >
-            <Icon
-              name="download"
-              size={14}
-            />
+          <button className="link" onClick={exportData}>
+            <Icon name="download" size={14} />
             Export backup
           </button>
 
           <label className="link file-btn">
-            <Icon
-              name="upload"
-              size={14}
-            />
+            <Icon name="upload" size={14} />
             Import backup
-
             <input
               type="file"
               accept="application/json,.json"
-              onChange={
-                importData
-              }
+              onChange={importData}
             />
           </label>
         </div>
@@ -4918,23 +3051,10 @@ function Settings({
 
       <section className="card source-card">
         <div>
-          <span className="eyebrow">
-            OFFICIAL REFERENCES
-          </span>
-
-          <h2>
-            Keep the source
-            close
-          </h2>
-
+          <span className="eyebrow">OFFICIAL REFERENCES</span>
+          <h2>Keep the source close</h2>
           <p>
-            The 2027 syllabus
-            can be updated.
-            Verify topic details
-            and exam updates
-            against the organizing
-            institute's current
-            documents.
+            The 2027 syllabus can be updated. Verify topic details and exam updates against the organizing institute's current documents.
           </p>
         </div>
 
@@ -4946,10 +3066,7 @@ function Settings({
             rel="noreferrer"
           >
             CS syllabus
-            <Icon
-              name="external"
-              size={14}
-            />
+            <Icon name="external" size={14} />
           </a>
 
           <a
@@ -4959,32 +3076,20 @@ function Settings({
             rel="noreferrer"
           >
             Important dates
-            <Icon
-              name="external"
-              size={14}
-            />
+            <Icon name="external" size={14} />
           </a>
         </div>
       </section>
 
       <section className="card danger">
         <div>
-          <h2>
-            Reset progress
-          </h2>
-
+          <h2>Reset progress</h2>
           <p>
-            Clears all ticks,
-            revision, mocks,
-            tasks, focus time,
-            activity and streak.
+            Clears all ticks, revision, mocks, tasks, focus time, activity and streak.
           </p>
         </div>
 
-        <button
-          className="danger-btn"
-          onClick={reset}
-        >
+        <button className="danger-btn" onClick={reset}>
           Reset everything
         </button>
       </section>
@@ -4995,116 +3100,60 @@ function Settings({
 /* ---------- app ---------- */
 
 export default function App() {
-  const [state, setState] =
-    useState(load);
-
-  const [page, setPage] =
-    useState(
-      () =>
-        window.location.hash.slice(
-          1
-        ) || 'dashboard'
-    );
-
-  const [timer, setTimer] =
-    useState({
-      mins: 25,
-      subject: '',
-      endAt: 0,
-      paused: 0
-    });
-
-  const [now, setNow] =
-    useState(
-      () => Date.now()
-    );
-
-  const [toast, setToast] =
-    useState('');
-
-  const pageRef =
-    useRef(null);
-
-  const active = NAV.some(
-    ([id]) => id === page
-  )
-    ? page
-    : 'dashboard';
-
-  usePageIn(
-    pageRef,
-    active
+  const [state, setState] = useState(load);
+  const [page, setPage] = useState(
+    () => window.location.hash.slice(1) || 'dashboard'
   );
+
+  const [timer, setTimer] = useState({
+    mins: 25,
+    subject: '',
+    endAt: 0,
+    paused: 0
+  });
+
+  const [now, setNow] = useState(() => Date.now());
+  const [toast, setToast] = useState('');
+  const pageRef = useRef(null);
+
+  const active = NAV.some(([id]) => id === page) ? page : 'dashboard';
+
+  usePageIn(pageRef, active);
 
   useEffect(() => {
     try {
-      localStorage.setItem(
-        KEY,
-        JSON.stringify(state)
-      );
+      localStorage.setItem(KEY, JSON.stringify(state));
     } catch {
       /* storage full or blocked */
     }
   }, [state]);
 
   useEffect(() => {
-    document.documentElement.dataset.theme =
-      state.dark
-        ? 'dark'
-        : 'light';
+    document.documentElement.dataset.theme = state.dark ? 'dark' : 'light';
   }, [state.dark]);
 
   useEffect(() => {
-    regenerateIfNeeded(
-      setState
-    );
+    regenerateIfNeeded(setState);
   }, []);
 
   useEffect(() => {
     const onHash = () =>
-      setPage(
-        window.location.hash.slice(
-          1
-        ) || 'dashboard'
-      );
+      setPage(window.location.hash.slice(1) || 'dashboard');
 
-    const id = setInterval(
-      () =>
-        regenerateIfNeeded(
-          setState
-        ),
-      60000
-    );
+    const id = setInterval(() => regenerateIfNeeded(setState), 60000);
 
-    window.addEventListener(
-      'hashchange',
-      onHash
-    );
-
+    window.addEventListener('hashchange', onHash);
     return () => {
-      window.removeEventListener(
-        'hashchange',
-        onHash
-      );
-
+      window.removeEventListener('hashchange', onHash);
       clearInterval(id);
     };
   }, []);
 
-  const go = useCallback(
-    (id) => {
-      window.location.hash =
-        id;
-
-      setPage(id);
-
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    },
-    []
-  );
+  const go = useCallback((id) => {
+    window.location.hash = id;
+    setPage(id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -5112,27 +3161,16 @@ export default function App() {
         e.ctrlKey ||
         e.metaKey ||
         e.altKey ||
-        /^(INPUT|SELECT|TEXTAREA)$/.test(
-          e.target.tagName
-        )
+        /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)
       ) {
         return;
       }
 
-      const n = Number(
-        e.key
-      );
+      const n = Number(e.key);
 
-      if (
-        n >= 1 &&
-        n <= NAV.length
-      ) {
-        go(
-          NAV[n - 1][0]
-        );
-      } else if (
-        e.key === 't'
-      ) {
+      if (n >= 1 && n <= NAV.length) {
+        go(NAV[n - 1][0]);
+      } else if (e.key === 't') {
         setState((s) => ({
           ...s,
           dark: !s.dark
@@ -5140,100 +3178,51 @@ export default function App() {
       }
     };
 
-    window.addEventListener(
-      'keydown',
-      onKey
-    );
-
-    return () =>
-      window.removeEventListener(
-        'keydown',
-        onKey
-      );
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, [go]);
 
   /* ----- focus timer ----- */
 
-  const running =
-    timer.endAt > 0;
-
-  const idle =
-    !running &&
-    !timer.paused;
+  const running = timer.endAt > 0;
+  const idle = !running && !timer.paused;
 
   const secsLeft = running
-    ? Math.max(
-      0,
-      Math.ceil(
-        (timer.endAt -
-          now) /
-        1000
-      )
-    )
-    : timer.paused ||
-    timer.mins * 60;
+    ? Math.max(0, Math.ceil((timer.endAt - now) / 1000))
+    : timer.paused || timer.mins * 60;
 
-  const addFocus =
-    useCallback(
-      (min, subject) =>
-        setState((s) => {
-          if (min < 1) {
-            return s;
+  const addFocus = useCallback((min, subject) => {
+    setState((s) => {
+      if (min < 1) return s;
+
+      const t = today();
+
+      return {
+        ...s,
+        focus: {
+          ...s.focus,
+          [t]: (s.focus[t] || 0) + min
+        },
+        focusBy: subject
+          ? {
+            ...s.focusBy,
+            [subject]: (s.focusBy[subject] || 0) + min
           }
-
-          const t = today();
-
-          return {
-            ...s,
-
-            focus: {
-              ...s.focus,
-              [t]:
-                (s.focus[t] ||
-                  0) + min
-            },
-
-            focusBy: subject
-              ? {
-                ...s.focusBy,
-
-                [subject]:
-                  (s.focusBy[
-                    subject
-                  ] || 0) + min
-              }
-              : s.focusBy
-          };
-        }),
-      []
-    );
+          : s.focusBy
+      };
+    });
+  }, []);
 
   useEffect(() => {
-    if (!running)
-      return undefined;
+    if (!running) return undefined;
 
-    const id =
-      setInterval(
-        () =>
-          setNow(
-            Date.now()
-          ),
-        250
-      );
-
-    return () =>
-      clearInterval(id);
+    const id = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(id);
   }, [running]);
 
   useEffect(() => {
-    if (
-      running &&
-      secsLeft === 0
-    ) {
-      addFocus(
-        timer.mins,
-        timer.subject
-      );
+    if (running && secsLeft === 0) {
+      addFocus(timer.mins, timer.subject);
 
       setTimer((t) => ({
         ...t,
@@ -5241,53 +3230,32 @@ export default function App() {
         paused: 0
       }));
 
-      setToast(
-        `Session complete · ${timer.mins} min logged`
-      );
-
+      setToast(`Session complete · ${timer.mins} min logged`);
       navigator.vibrate?.(300);
     }
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running, secsLeft]);
 
   useEffect(() => {
     document.title = running
-      ? `${clock(
-        secsLeft
-      )} · Focus`
+      ? `${clock(secsLeft)} · Focus`
       : 'GATE CSE tracker';
   }, [running, secsLeft]);
 
   useEffect(() => {
-    if (!toast)
-      return undefined;
+    if (!toast) return undefined;
 
-    const id =
-      setTimeout(
-        () => setToast(''),
-        4000
-      );
-
-    return () =>
-      clearTimeout(id);
+    const id = setTimeout(() => setToast(''), 4000);
+    return () => clearTimeout(id);
   }, [toast]);
 
   const start = () => {
-    const n =
-      Date.now();
-
+    const n = Date.now();
     setNow(n);
 
     setTimer((t) => ({
       ...t,
-
-      endAt:
-        n +
-        (t.paused ||
-          t.mins * 60) *
-        1000,
-
+      endAt: n + (t.paused || t.mins * 60) * 1000,
       paused: 0
     }));
   };
@@ -5295,35 +3263,16 @@ export default function App() {
   const pause = () =>
     setTimer((t) => ({
       ...t,
-
       endAt: 0,
-
-      paused: Math.max(
-        1,
-        Math.ceil(
-          (t.endAt -
-            Date.now()) /
-          1000
-        )
-      )
+      paused: Math.max(1, Math.ceil((t.endAt - Date.now()) / 1000))
     }));
 
   const stop = () => {
-    const mins = Math.floor(
-      (timer.mins * 60 -
-        secsLeft) /
-      60
-    );
+    const mins = Math.floor((timer.mins * 60 - secsLeft) / 60);
 
     if (mins >= 1) {
-      addFocus(
-        mins,
-        timer.subject
-      );
-
-      setToast(
-        `${mins} min logged`
-      );
+      addFocus(mins, timer.subject);
+      setToast(`${mins} min logged`);
     }
 
     setTimer((t) => ({
@@ -5335,363 +3284,212 @@ export default function App() {
 
   const setMins = (m) => {
     if (idle) {
-      setTimer((t) => ({
-        ...t,
-        mins: m
-      }));
+      setTimer((t) => ({ ...t, mins: m }));
     }
   };
 
   const setSubject = (s) =>
-    setTimer((t) => ({
-      ...t,
-      subject: s
-    }));
+    setTimer((t) => ({ ...t, subject: s }));
 
   /* ----- tracker actions ----- */
 
-  const edit = useCallback(
-    (name, up) =>
+  const edit = useCallback((name, up) => {
+    setState((s) => {
+      const nd = up(s.subjects[name]);
+      return track(
+        {
+          ...s,
+          subjects: {
+            ...s.subjects,
+            [name]: nd
+          }
+        },
+        units(nd) - units(s.subjects[name])
+      );
+    });
+  }, []);
+
+  const flip = useCallback(
+    (k) => (name, i) =>
+      edit(name, (d) => ({
+        ...d,
+        [k]: d[k].map((v, x) => (x === i ? !v : v))
+      })),
+    [edit]
+  );
+
+  const toggleLearn = useMemo(() => flip('learn'), [flip]);
+  const togglePYQ = useMemo(() => flip('pyq'), [flip]);
+  const toggleWeak = useMemo(() => flip('weak'), [flip]);
+
+  const bulkLearn = useCallback(
+    (n, v) =>
+      edit(n, (d) => ({
+        ...d,
+        learn: d.learn.map(() => v)
+      })),
+    [edit]
+  );
+
+  const bulkPYQ = useCallback(
+    (n, v) =>
+      edit(n, (d) => ({
+        ...d,
+        pyq: d.pyq.map(() => v)
+      })),
+    [edit]
+  );
+
+  const toggleRev = useCallback(
+    (n, i, r) =>
+      edit(n, (d) => ({
+        ...d,
+        rev: d.rev.map((v, x) =>
+          x === i ? (v >= r ? r - 1 : r) : v
+        )
+      })),
+    [edit]
+  );
+
+  const bulkRev = useCallback(
+    (n, v) =>
+      edit(n, (d) => ({
+        ...d,
+        rev: d.rev.map(() => (v ? REV_ROUNDS : 0))
+      })),
+    [edit]
+  );
+
+  const addTask = useCallback(
+    (name, i, kind, label) =>
       setState((s) => {
-        const nd = up(
-          s.subjects[name]
-        );
+        if (
+          s.tasks.some(
+            (t) =>
+              t.name === name &&
+              t.i === i &&
+              t.kind === kind &&
+              !t.done
+          )
+        ) {
+          return s;
+        }
+
+        return {
+          ...s,
+          tasks: [
+            ...s.tasks,
+            {
+              id: uid(),
+              name,
+              i,
+              kind,
+              label,
+              done: false
+            }
+          ]
+        };
+      }),
+    []
+  );
+
+  const toggleTask = useCallback(
+    (id) =>
+      setState((s) => {
+        const task = s.tasks.find((t) => t.id === id);
+        if (!task) return s;
+
+        const doneNow = !task.done;
+        const d = s.subjects[task.name];
+        const nd = { ...d };
+
+        if (task.kind === 'learn') {
+          nd.learn = d.learn.map((v, x) => (x === task.i ? doneNow : v));
+        }
+
+        if (task.kind === 'pyq') {
+          nd.pyq = d.pyq.map((v, x) => (x === task.i ? doneNow : v));
+        }
+
+        if (task.kind === 'rev1') {
+          nd.rev = d.rev.map((v, x) =>
+            x === task.i ? (doneNow ? REV_ROUNDS : 0) : v
+          );
+        }
+
+        const delta = units(nd) - units(d);
 
         return track(
           {
             ...s,
-
+            tasks: s.tasks.map((t) =>
+              t.id === id ? { ...t, done: doneNow } : t
+            ),
             subjects: {
               ...s.subjects,
-              [name]: nd
+              [task.name]: nd
             }
           },
-
-          units(nd) -
-          units(
-            s.subjects[
-            name
-            ]
-          )
+          delta
         );
       }),
     []
   );
 
-  const flip = useCallback(
-    (k) =>
-      (name, i) =>
-        edit(name, (d) => ({
-          ...d,
-
-          [k]: d[k].map(
-            (v, x) =>
-              x === i
-                ? !v
-                : v
-          )
-        })),
-    [edit]
+  const regeneratePlan = useCallback(
+    () =>
+      setState((s) => ({
+        ...s,
+        planDate: today(),
+        tasks: generatePlan(s)
+      })),
+    []
   );
 
-  const toggleLearn =
-    useMemo(
-      () =>
-        flip('learn'),
-      [flip]
-    );
-
-  const togglePYQ =
-    useMemo(
-      () =>
-        flip('pyq'),
-      [flip]
-    );
-
-  const toggleWeak =
-    useMemo(
-      () =>
-        flip('weak'),
-      [flip]
-    );
-
-  const bulkLearn =
-    useCallback(
-      (n, v) =>
-        edit(n, (d) => ({
-          ...d,
-          learn:
-            d.learn.map(
-              () => v
-            )
-        })),
-      [edit]
-    );
-
-  const bulkPYQ =
-    useCallback(
-      (n, v) =>
-        edit(n, (d) => ({
-          ...d,
-          pyq:
-            d.pyq.map(
-              () => v
-            )
-        })),
-      [edit]
-    );
-
-  const toggleRev =
-    useCallback(
-      (n, i, r) =>
-        edit(n, (d) => ({
-          ...d,
-
-          rev: d.rev.map(
-            (v, x) =>
-              x === i
-                ? v >= r
-                  ? r - 1
-                  : r
-                : v
-          )
-        })),
-      [edit]
-    );
-
-  const bulkRev =
-    useCallback(
-      (n, v) =>
-        edit(n, (d) => ({
-          ...d,
-
-          rev: d.rev.map(
-            () =>
-              v
-                ? REV_ROUNDS
-                : 0
-          )
-        })),
-      [edit]
-    );
-
-  const addTask =
-    useCallback(
-      (
-        name,
-        i,
-        kind,
-        label
-      ) =>
-        setState((s) => {
-          if (
-            s.tasks.some(
-              (t) =>
-                t.name ===
-                name &&
-                t.i === i &&
-                t.kind ===
-                kind &&
-                !t.done
-            )
-          ) {
-            return s;
-          }
-
-          return {
+  const addMock = useCallback(
+    (mock) =>
+      setState((s) =>
+        track(
+          {
             ...s,
-
-            tasks: [
-              ...s.tasks,
-              {
-                id: uid(),
-                name,
-                i,
-                kind,
-                label,
-                done: false
-              }
-            ]
-          };
-        }),
-      []
-    );
-
-  const toggleTask =
-    useCallback(
-      (id) =>
-        setState((s) => {
-          const task =
-            s.tasks.find(
-              (t) =>
-                t.id === id
-            );
-
-          if (!task)
-            return s;
-
-          const doneNow =
-            !task.done;
-
-          const d =
-            s.subjects[
-            task.name
-            ];
-
-          const nd = {
-            ...d
-          };
-
-          if (
-            task.kind ===
-            'learn'
-          ) {
-            nd.learn =
-              d.learn.map(
-                (v, x) =>
-                  x ===
-                    task.i
-                    ? doneNow
-                    : v
-              );
-          }
-
-          if (
-            task.kind ===
-            'pyq'
-          ) {
-            nd.pyq =
-              d.pyq.map(
-                (v, x) =>
-                  x ===
-                    task.i
-                    ? doneNow
-                    : v
-              );
-          }
-
-          if (
-            task.kind ===
-            'rev1'
-          ) {
-            nd.rev =
-              d.rev.map(
-                (v, x) =>
-                  x ===
-                    task.i
-                    ? doneNow
-                      ? REV_ROUNDS
-                      : 0
-                    : v
-              );
-          }
-
-          const delta =
-            units(nd) -
-            units(d);
-
-          return track(
-            {
-              ...s,
-
-              tasks:
-                s.tasks.map(
-                  (t) =>
-                    t.id === id
-                      ? {
-                        ...t,
-                        done:
-                          doneNow
-                      }
-                      : t
-                ),
-
-              subjects: {
-                ...s.subjects,
-
-                [task.name]:
-                  nd
-              }
-            },
-            delta
-          );
-        }),
-      []
-    );
-
-  const regeneratePlan =
-    useCallback(
-      () =>
-        setState((s) => ({
-          ...s,
-          planDate:
-            today(),
-          tasks:
-            generatePlan(s)
-        })),
-      []
-    );
-
-  const addMock =
-    useCallback(
-      (mock) =>
-        setState((s) =>
-          track(
-            {
-              ...s,
-              mocks: [
-                ...s.mocks,
-                mock
-              ]
-            },
-            1
-          )
-        ),
-      []
-    );
-
-  const deleteMock =
-    useCallback(
-      (id) =>
-        setState((s) => ({
-          ...s,
-
-          mocks:
-            s.mocks.filter(
-              (x) =>
-                x.id !== id
-            )
-        })),
-      []
-    );
-
-  const reset =
-    useCallback(() => {
-      if (
-        window.confirm(
-          'Reset every GATE tracker item?'
+            mocks: [...s.mocks, mock]
+          },
+          1
         )
-      ) {
-        setState((s) => ({
-          ...blank(),
-          dark: s.dark
-        }));
-      }
-    }, []);
+      ),
+    []
+  );
+
+  const deleteMock = useCallback(
+    (id) =>
+      setState((s) => ({
+        ...s,
+        mocks: s.mocks.filter((x) => x.id !== id)
+      })),
+    []
+  );
+
+  const reset = useCallback(() => {
+    if (window.confirm('Reset every GATE tracker item?')) {
+      setState((s) => ({
+        ...blank(),
+        dark: s.dark,
+        name: s.name
+      }));
+    }
+  }, []);
+
+  const setName = useCallback(
+    (name) => setState((s) => ({ ...s, name })),
+    []
+  );
 
   const t = today();
-
   const y = new Date();
-
-  y.setDate(
-    y.getDate() - 1
-  );
+  y.setDate(y.getDate() - 1);
 
   const streak =
-    state.lastActive ===
-      t ||
-      state.lastActive ===
-      ymd(y)
+    state.lastActive === t || state.lastActive === ymd(y)
       ? state.streak
       : 0;
 
@@ -5700,99 +3498,66 @@ export default function App() {
       <Dashboard
         state={state}
         go={go}
-        toggleLearn={
-          toggleLearn
-        }
+        toggleLearn={toggleLearn}
         streak={streak}
+        setName={setName}
       />
     ),
-
     subjects: (
       <Subjects
         state={state}
-        toggleLearn={
-          toggleLearn
-        }
-        toggleWeak={
-          toggleWeak
-        }
-        bulkLearn={
-          bulkLearn
-        }
+        toggleLearn={toggleLearn}
+        toggleWeak={toggleWeak}
+        bulkLearn={bulkLearn}
       />
     ),
-
     pyqs: (
       <PYQs
         state={state}
-        togglePYQ={
-          togglePYQ
-        }
-        bulkPYQ={
-          bulkPYQ
-        }
+        togglePYQ={togglePYQ}
+        bulkPYQ={bulkPYQ}
       />
     ),
-
     revision: (
       <Revision
         state={state}
-        toggleRev={
-          toggleRev
-        }
-        bulkRev={
-          bulkRev
-        }
+        toggleRev={toggleRev}
+        bulkRev={bulkRev}
       />
     ),
-
     priority: (
       <Priority
         state={state}
         addTask={addTask}
       />
     ),
-
     plan: (
       <Plan
         state={state}
-        toggleTask={
-          toggleTask
-        }
-        regenerate={
-          regeneratePlan
-        }
+        toggleTask={toggleTask}
+        regenerate={regeneratePlan}
       />
     ),
-
     focus: (
       <Focus
         state={state}
         timer={timer}
-        secsLeft={
-          secsLeft
-        }
+        secsLeft={secsLeft}
         running={running}
         setMins={setMins}
-        setSubject={
-          setSubject
-        }
+        setSubject={setSubject}
         start={start}
         pause={pause}
         stop={stop}
       />
     ),
-
     tests: (
       <Tests
         state={state}
         addMock={addMock}
-        deleteMock={
-          deleteMock
-        }
+        deleteMock={deleteMock}
       />
     ),
-
     settings: (
       <Settings
         state={state}
@@ -5806,43 +3571,26 @@ export default function App() {
     <div className="shell">
       <header className="topbar">
         <div className="topbar-in">
-          <nav
-            className="topnav"
-            aria-label="Main navigation"
-          >
-            {NAV.map(
-              ([id, label]) => (
-                <button
-                  key={id}
-                  className={`nav-item ${active === id
-                      ? 'active'
-                      : ''
-                    }`}
-                  aria-current={
-                    active === id
-                      ? 'page'
-                      : undefined
-                  }
-                  onClick={() =>
-                    go(id)
-                  }
-                >
-                  {label}
-                </button>
-              )
-            )}
+          <nav className="topnav" aria-label="Main navigation">
+            {NAV.map(([id, label]) => (
+              <button
+                key={id}
+                className={`nav-item ${active === id ? 'active' : ''}`}
+                aria-current={active === id ? 'page' : undefined}
+                onClick={() => go(id)}
+              >
+                {label}
+              </button>
+            ))}
           </nav>
 
           <button
             className="theme-btn"
             onClick={() =>
-              setState(
-                (s) => ({
-                  ...s,
-                  dark:
-                    !s.dark
-                })
-              )
+              setState((s) => ({
+                ...s,
+                dark: !s.dark
+              }))
             }
             aria-label={
               state.dark
@@ -5852,87 +3600,41 @@ export default function App() {
             title="Toggle theme (T)"
           >
             <Icon
-              name={
-                state.dark
-                  ? 'sun'
-                  : 'moon'
-              }
-              size={18}
+              name={state.dark ? 'sun' : 'moon'}
+              size={20}
             />
           </button>
         </div>
       </header>
 
-      <main
-        key={active}
-        ref={pageRef}
-        className="page"
-      >
+      <main key={active} ref={pageRef} className="page">
         {pages[active]}
       </main>
 
-      {!idle &&
-        active !==
-        'focus' && (
-          <div
-            className="dock"
-            role="status"
+      {!idle && active !== 'focus' && (
+        <div className="dock" role="status">
+          <span className={`dock-dot ${running ? 'live' : ''}`} />
+          <b>{clock(secsLeft)}</b>
+          <button
+            className="ghost"
+            onClick={running ? pause : start}
           >
-            <span
-              className={`dock-dot ${running
-                  ? 'live'
-                  : ''
-                }`}
-            />
-
-            <b>
-              {clock(
-                secsLeft
-              )}
-            </b>
-
-            <button
-              className="ghost"
-              onClick={
-                running
-                  ? pause
-                  : start
-              }
-            >
-              {running
-                ? 'Pause'
-                : 'Resume'}
-            </button>
-
-            <button
-              className="link"
-              onClick={() =>
-                go('focus')
-              }
-            >
-              Open
-            </button>
-          </div>
-        )}
+            {running ? 'Pause' : 'Resume'}
+          </button>
+          <button className="link" onClick={() => go('focus')}>
+            Open
+          </button>
+        </div>
+      )}
 
       {toast && (
-        <div
-          className="toast"
-          role="status"
-        >
+        <div className="toast" role="status">
           {toast}
         </div>
       )}
 
       <footer className="foot">
-        GATE CSE study tracker{' '}
-        <span>·</span>{' '}
-        Progress is stored
-        locally in this
-        browser{' '}
-        <span>·</span>{' '}
-        Press 1–9 to switch
-        pages, T for theme
+        GATE CSE study tracker <span>·</span> Progress is stored locally in this browser <span>·</span> Press 1–9 to switch pages, T for theme
       </footer>
     </div>
   );
