@@ -4110,7 +4110,17 @@ export default function App() {
       )}
 
       <footer className="foot">
-        GATE CSE study tracker <span>·</span> Progress is stored locally in this browser <span>·</span> Press 1–9 to switch pages, T for theme
+        <div>
+          GATE CSE study tracker
+          <span>·</span>
+          Progress is stored locally in this browser
+          <span>·</span>
+          Press 1–9 to switch pages, T for theme
+        </div>
+
+        <div className="made-by">
+          Made by <span className="maker-icon">✦</span> <strong>Tejas Patel</strong>
+        </div>
       </footer>
     </div>
   );
