@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Dancing+Script:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600&display=swap');
 
 /* ---------- design tokens ---------- */
 :root {
   --font-head: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
   --font-body: 'Instrument Sans', 'Segoe UI', system-ui, sans-serif;
-  --font-script: 'Caveat', 'Segoe Print', cursive;
+  --font-script: "Dancing Script", 'Segoe Print', cursive;
     
 
   /* Main theme */
