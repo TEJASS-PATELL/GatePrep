@@ -2422,7 +2422,7 @@ tbody tr:hover td {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-
+ 
 @media (max-width: 860px) {
   .page {
     padding: 20px 16px 24px;
@@ -2491,7 +2491,7 @@ tbody tr:hover td {
     bottom: 76px;
   }
 }
-
+ 
 @media (max-width: 520px) {
   .grid4 {
     grid-template-columns: 1fr 1fr;
@@ -2548,7 +2548,7 @@ tbody tr:hover td {
     font-size: 28px;
   }
 }
-
+ 
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
