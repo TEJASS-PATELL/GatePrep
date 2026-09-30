@@ -2423,130 +2423,169 @@ tbody tr:hover td {
   }
 }
  
-@media (max-width: 860px) {
-  .page {
-    padding: 20px 16px 24px;
-    gap: 16px;
-  }
-  .page-head h1 {
-    font-size: 28px;
-  }
-  .topbar-in {
-    padding: 8px 16px;
-  }
-  .admit-cells {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .adm-item {
-    padding: 14px 16px;
-  }
-  .adm-item b {
-    font-size: 24px;
-  }
-  .adm-item:nth-child(3n) {
-    border-right: 1.5px dashed var(--line);
-  }
-  .adm-item:nth-child(2n) {
-    border-right: 0;
-  }
-  .adm-item:nth-last-child(-n + 3) {
-    border-bottom: 1.5px dashed var(--line);
-  }
-  .adm-item:nth-last-child(-n + 2) {
-    border-bottom: 0;
-  }
-  .mock-form {
-    grid-template-columns: 1fr 1fr;
-  }
-  .mock-form input:first-child,
-  .mock-form .primary {
-    grid-column: 1 / -1;
-  }
-  .settings-form {
-    grid-template-columns: 1fr;
-  }
-  .settings-form .primary {
-    grid-column: 1;
-  }
-  .form-msg {
-    grid-column: 1;
-  }
-  .pri-row {
-    grid-template-columns: 36px minmax(0, 1fr);
-  }
-  .pri-row > .pri-risk,
-  .pri-row > .ghost,
-  .pri-row > .tag-done {
-    grid-column: 2;
-    justify-self: start;
-  }
-  .banner {
-    flex-direction: column-reverse;
-    align-items: flex-start;
-  }
-  .dock {
-    bottom: 12px;
-  }
-  .toast {
-    bottom: 76px;
-  }
+/* ==========================================================
+   RESPONSIVE PATCH: paste at the very END of App.css.
+   Only layout / sizing for small screens. Desktop stays as is.
+   ========================================================== */
+
+/* ---------- safe global fixes (no visual change on desktop) ---------- */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { overflow-x: clip; }
+button, .nav-item, .pill, .link, label.next-item { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+
+/* ---------- touch devices: no sticky hover, bigger tap targets ---------- */
+@media (hover: none) {
+  .stat:hover, .next-item:hover, .pri-row:hover, .primary:hover, .ghost:hover:not(:disabled), .danger-btn:hover, .weak-btn:hover { transform: none; }
+  .theme-btn:hover svg { transform: none; }
 }
- 
+@media (pointer: coarse) {
+  input[type='checkbox'] { width: 24px; height: 24px; }
+  .weak-btn { padding: 9px; margin: -5px; }
+  .icon-btn { padding: 10px; }
+  .nav-item { padding: 10px 16px; }
+  .filters button, .rbtns button { padding-block: 9px; }
+  .topic, .row { padding-block: 12px; }
+}
+
+/* ---------- tablet + phone (<= 860px) ---------- */
+@media (max-width: 860px) {
+  /* iOS zooms into inputs under 16px */
+  .search, .select, .mock-form input, .settings-form input, .weight-field input { font-size: 16px; }
+  .topbar { padding-top: env(safe-area-inset-top, 0px); }
+  .topbar-in, .page { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .page-head { align-items: stretch; }
+  .page-head > div { flex: 1 1 100%; }
+  .page-head .search { width: 100%; }
+  .sec-head > p { max-width: none; }
+  .filters { flex-wrap: nowrap; overflow-x: auto; margin-inline: -16px; padding-inline: 16px; scrollbar-width: none; }
+  .filters::-webkit-scrollbar { display: none; }
+  .filters button { flex: none; }
+  .dock, .toast { width: max-content; max-width: calc(100vw - 24px); }
+  .dock { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .toast { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); text-align: center; }
+  .foot { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  .chart { margin-inline: -16px; padding-inline: 16px; -webkit-overflow-scrolling: touch; }
+  .chart svg { min-width: 620px; }
+  .legend-row { position: sticky; left: 0; }
+}
+
+/* ---------- phone (<= 640px) ---------- */
+@media (max-width: 640px) {
+  .grid2, .grid-main { gap: 16px; }
+  .subj-head { gap: 12px; }
+  .subj-head h3 { font-size: 16px; }
+  .subj-head .ghost { padding: 6px 10px; }
+  .banner h2 { font-size: 22px; }
+  .doit { padding: 18px 18px 16px; }
+  .doit-big { font-size: clamp(26px, 8vw, 34px); }
+  .doit-name { min-width: 0; max-width: 100%; }
+  .doit-line { font-size: 13px; }
+  .timer-ring { width: min(260px, 100%); }
+  .timer-actions { width: 100%; }
+  .timer-actions > * { flex: 1 1 140px; }
+  .select { max-width: 100%; }
+  .source-card, .danger { flex-direction: column; align-items: stretch; }
+  .source-links > *, .danger-btn { flex: 1 1 100%; justify-content: center; text-align: center; }
+  .weight-actions > * { flex: 1 1 auto; }
+  .weight-total { flex: 1 0 100%; }
+  .target-preview { flex-wrap: wrap; }
+}
+
+/* ---------- small phone (<= 520px) ---------- */
 @media (max-width: 520px) {
-  .grid4 {
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  .grid-cards {
-    columns: 1;
-  }
-  .stat {
-    padding: 14px;
-  }
-  .stat strong {
-    font-size: 22px;
-  }
-  .card {
-    padding: 16px;
-  }
-  .heat {
-    gap: 2px;
-  }
-  .cols {
-    gap: 6px;
-  }
-  .r-insights {
-    grid-template-columns: 1fr;
-  }
-  .r-row,
-  .sub-row {
-    grid-template-columns: minmax(0, 1fr) auto;
-    row-gap: 6px;
-  }
-  .r-row .r-name,
-  .sub-row .r-name {
-    grid-column: 1;
-    grid-row: 1;
-  }
-  .r-row .r-pct,
-  .sub-row .r-pct {
-    grid-column: 2;
-    grid-row: 1;
-  }
-  .r-row .bar,
-  .sub-row .bar {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-  .timer-c b {
-    font-size: 46px;
-  }
-  .week-top {
-    gap: 14px;
-  }
-  .doit-big {
-    font-size: 28px;
-  }
+  .page { padding-top: 16px; padding-bottom: 20px; gap: 14px; }
+  .page-head h1 { font-size: 26px; }
+  .card { padding: 16px; border-radius: 14px; }
+  .sec-head { margin-bottom: 14px; }
+  .sec-head h2 { font-size: 18px; }
+  .nav-item { padding: 8px 14px; font-size: 14px; }
+  .theme-btn { width: 38px; height: 38px; }
+
+  /* exam ticket */
+  .admit { border-radius: 16px; }
+  .admit-main { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: end; column-gap: 14px; padding: 18px; }
+  .admit-k { grid-column: 1 / -1; }
+  .admit-days { font-size: 52px; }
+  .admit-main em { margin: 0 0 6px; text-align: right; }
+  .admit-ring { justify-content: center; padding: 14px 16px; }
+  .adm-item { padding: 12px 14px; }
+  .adm-item b { font-size: 22px; }
+  .adm-item span, .adm-item em { font-size: 12px; }
+
+  /* stats */
+  .stat strong { font-size: 20px; }
+  .stat-top { font-size: 12px; }
+  .chip { width: 28px; height: 28px; border-radius: 9px; }
+
+  /* weekly + bars */
+  .week-top strong { font-size: 22px; }
+  .col-track { height: 80px; }
+  .cols.tall .col-track { height: 120px; }
+
+  /* readiness tiles stay in one row */
+  .r-insights { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .r-ins { padding: 10px; }
+  .r-ins span { font-size: 10.5px; line-height: 1.25; }
+  .r-ins b { font-size: 20px; }
+  .r-ins em { font-size: 11px; }
+  .paper-split { gap: 8px; }
+  .paper-split div { padding: 10px; }
+  .paper-split b { font-size: 19px; }
+  .paper-split span { font-size: 11px; line-height: 1.25; }
+
+  /* rose chart: bigger text in svg units so it reads on a phone */
+  .rose-wrap { padding-inline: 2px; }
+  .rose-code { font-size: 16px; }
+  .rose-pct { font-size: 14px; }
+  .rose-big { font-size: 34px; }
+  .rose-sub { font-size: 13.5px; }
+  .rose-note { font-size: 12.5px; }
+
+  /* heatmap */
+  .heat { gap: 2px; }
+  .heat .cell { border-radius: 2px; }
+  .heat-foot { font-size: 12px; }
+
+  /* lists */
+  .next-item { gap: 10px; padding: 11px 12px; }
+  .next-item strong { font-size: 14px; }
+  .pri-row { gap: 10px 12px; padding: 12px; }
+  .pri-row > .ghost { width: 100%; }
+  .road-row { gap: 8px; }
+
+  /* focus */
+  .timer { padding-block: 22px; gap: 18px; }
+  .timer-c b { font-size: 46px; }
+  .pills { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); width: 100%; gap: 6px; }
+  .pill { padding: 10px 0; text-align: center; }
+  .sub-row, .r-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 6px; }
+  .sub-row .r-name, .r-row .r-name { grid-column: 1; grid-row: 1; }
+  .sub-row .r-pct, .r-row .r-pct { grid-column: 2; grid-row: 1; }
+  .sub-row .bar, .r-row .bar { grid-column: 1 / -1; grid-row: 2; }
+  .dock { gap: 8px; padding: 8px 10px 8px 14px; }
+  .dock b { font-size: 16px; }
+
+  /* tests + settings */
+  .mock-form { gap: 10px; }
+  th, td { padding: 10px 6px; }
+  .weight-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .settings-form .primary { width: 100%; justify-self: stretch; }
+}
+
+/* ---------- very small phone (<= 360px) ---------- */
+@media (max-width: 360px) {
+  .grid4 { grid-template-columns: 1fr; }
+  .r-insights { grid-template-columns: 1fr; }
+  .admit-days { font-size: 46px; }
+  .timer-c b { font-size: 40px; }
+  .nav-item { padding: 8px 12px; font-size: 13.5px; }
+}
+
+/* ---------- landscape phone / short screens ---------- */
+@media (max-height: 500px) and (orientation: landscape) {
+  .timer-ring { width: min(220px, 62vh); }
+  .timer { padding-block: 16px; gap: 14px; }
+  .dock { bottom: 8px; }
 }
  
 @media (prefers-reduced-motion: reduce) {
