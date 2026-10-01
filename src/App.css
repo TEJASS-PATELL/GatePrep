@@ -1698,6 +1698,7 @@ input[type='checkbox']:checked::after {
 
 .review-stats {
   display: grid;
+  margin-bottom: 20px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
@@ -1731,43 +1732,30 @@ input[type='checkbox']:checked::after {
 }
 
 .review-chart-wrap {
-  overflow-x: auto;
+  height: 270px;
   margin: 8px -4px 4px;
-  scrollbar-width: thin;
 }
 
-.review-chart {
-  display: block;
-  width: 100%;
-  min-width: 600px;
-  height: auto;
+.review-chart-wrap .recharts-wrapper,
+.review-chart-wrap .recharts-surface {
   overflow: visible;
 }
 
-.review-gridline {
+.review-chart-wrap .recharts-cartesian-grid-horizontal line {
   stroke: var(--line);
-  stroke-dasharray: 3 6;
-  stroke-width: 1;
 }
 
-.review-bar {
-  fill: var(--teal);
-  opacity: 0.78;
-  transition: opacity 0.2s, y 0.4s, height 0.4s;
-}
-
-.review-bar:hover {
-  opacity: 1;
-}
-
-.review-bar.today {
-  fill: var(--blue);
-  opacity: 1;
-}
-
-.review-axis {
+.review-chart-wrap .recharts-cartesian-axis-tick-value {
   fill: var(--mute);
-  font: 600 11px var(--font-body);
+  font-family: var(--font-body);
+}
+
+.review-chart-wrap .recharts-tooltip-cursor {
+  stroke: var(--line);
+}
+
+.review-chart-loading {
+  height: 100%;
 }
 
 .review-queue-head {
