@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Bar, Head, Icon, NAMES, SUBJECTS, pct } from './shared.jsx';
+import { Bar, Dropdown, Head, Icon, NAMES, SUBJECTS, pct } from './shared.jsx';
 
 function Recall({ state, saveNote, deleteNote, go }) {
   const initialSubject = NAMES[0];
@@ -110,16 +110,22 @@ function Recall({ state, saveNote, deleteNote, go }) {
           <form className="recall-form" onSubmit={saveQuickNote}>
             <label>
               Subject
-              <select className="select" value={subject} onChange={(event) => updateSubject(event.target.value)}>
-                {NAMES.map((name) => <option key={name} value={name}>{name}</option>)}
-              </select>
+              <Dropdown
+                ariaLabel="Recall subject"
+                options={NAMES.map((name) => ({ value: name, label: name }))}
+                value={subject}
+                onChange={updateSubject}
+              />
             </label>
 
             <label>
               Topic
-              <select className="select" value={topic} onChange={(event) => updateTopic(event.target.value)}>
-                {SUBJECTS[subject].topics.map((name) => <option key={name} value={name}>{name}</option>)}
-              </select>
+              <Dropdown
+                ariaLabel="Recall topic"
+                options={SUBJECTS[subject].topics.map((name) => ({ value: name, label: name }))}
+                value={topic}
+                onChange={updateTopic}
+              />
             </label>
 
             <label>

@@ -990,6 +990,59 @@ const Col = ({ pct: p, label, on, title }) => {
   );
 };
 
+const Dropdown = ({ options, value, onChange, ariaLabel }) => {
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const selected = options.find((option) => option.value === value);
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const closeOnOutsideClick = (event) => {
+      if (!dropdownRef.current?.contains(event.target)) setOpen(false);
+    };
+
+    document.addEventListener('mousedown', closeOnOutsideClick);
+    return () => document.removeEventListener('mousedown', closeOnOutsideClick);
+  }, [open]);
+
+  return (
+    <div className="subject-select" ref={dropdownRef}>
+      <button
+        type="button"
+        className="subject-select-trigger"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={ariaLabel}
+        onClick={() => setOpen((isOpen) => !isOpen)}
+      >
+        <span>{selected?.label}</span>
+        <span className="subject-select-arrow" aria-hidden="true" />
+      </button>
+
+      {open && (
+        <div className="subject-select-menu" role="listbox">
+          {options.map((option) => (
+            <button
+              key={option.value || 'none'}
+              type="button"
+              role="option"
+              aria-selected={option.value === value}
+              className={option.value === value ? 'selected' : ''}
+              onClick={() => {
+                onChange(option.value);
+                setOpen(false);
+              }}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Head = ({ title, sub, action }) => (
   <div className="page-head">
     <div>
@@ -1590,4 +1643,4 @@ function WeekCard({ state, setName }) {
   );
 }
 
-export { Bar, Col, Count, DEFAULT_TARGET_MAX, DEFAULT_TARGET_MIN, DEFAULT_WEEK_GOAL, EXAM_DEFAULT, Head, Heatmap, Icon, KEY, MockChart, NAMES, NAV, PATHS, PRESETS, REVIEW_INTERVALS, REV_ROUNDS, ReadinessByArea, Ring, RoseChart, SUBJECTS, SUBJECT_COLORS, SYLLABUS_URL, Stat, WEIGHTS, WeekCard, avg, band, blank, clamp, clock, colorVar, dateAfter, dateGap, daysLeft, fmt, generatePlan, hm, labelFor, load, longDate, metrics, nextAction, normalize, overall, pct, reduced, regenerateIfNeeded, reviewLabel, targetLabel, targetStatus, today, track, uid, units, useCount, usePageIn, useSettled, useTween, ymd };
+export { Bar, Col, Count, DEFAULT_TARGET_MAX, DEFAULT_TARGET_MIN, DEFAULT_WEEK_GOAL, Dropdown, EXAM_DEFAULT, Head, Heatmap, Icon, KEY, MockChart, NAMES, NAV, PATHS, PRESETS, REVIEW_INTERVALS, REV_ROUNDS, ReadinessByArea, Ring, RoseChart, SUBJECTS, SUBJECT_COLORS, SYLLABUS_URL, Stat, WEIGHTS, WeekCard, avg, band, blank, clamp, clock, colorVar, dateAfter, dateGap, daysLeft, fmt, generatePlan, hm, labelFor, load, longDate, metrics, nextAction, normalize, overall, pct, reduced, regenerateIfNeeded, reviewLabel, targetLabel, targetStatus, today, track, uid, units, useCount, usePageIn, useSettled, useTween, ymd };

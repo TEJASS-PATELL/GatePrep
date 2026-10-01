@@ -1,4 +1,4 @@
-import { Bar, Col, Head, Icon, NAMES, PRESETS, SUBJECTS, SUBJECT_COLORS, Stat, clamp, clock, colorVar, hm, today, ymd } from './shared.jsx';
+import { Bar, Col, Dropdown, Head, Icon, NAMES, PRESETS, SUBJECTS, SUBJECT_COLORS, Stat, clamp, clock, colorVar, hm, today, ymd } from './shared.jsx';
 
 function Focus({
   state,
@@ -140,19 +140,15 @@ function Focus({
             ))}
           </div>
 
-          <select
-            className="select"
+          <Dropdown
             value={timer.subject}
-            onChange={(e) => setSubject(e.target.value)}
-            aria-label="Subject for this session"
-          >
-            <option value="">No subject</option>
-            {NAMES.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
+            onChange={setSubject}
+            ariaLabel="Subject for this session"
+            options={[
+              { value: '', label: 'No subject' },
+              ...NAMES.map((name) => ({ value: name, label: name }))
+            ]}
+          />
 
           <div className="timer-actions">
             {running ? (

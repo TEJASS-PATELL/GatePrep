@@ -22,7 +22,7 @@
   /* Supporting colors */
   --teal: #159f91;
   --green: #22a06b;
-  --amber: #e09a2b;
+  --amber: #3158d4;
   --red: #f02323;
 
   /* Main dark accent */
@@ -57,17 +57,17 @@
   --line: #282828;
 
   /* Main yellow accent */
-  --blue: #fbbc00;
+  --blue: #f5b800;
 
   /* Supporting colors */
-  --teal: #fbbc00;
-  --green: #d4af37;
-  --amber: #ffcf33;
+  --teal: #38c7b6;
+  --green: #72d6a4;
+  --amber: #f5b800;
   --red: #f80606;
 
   /* Main dark accent */
-  --navy: #fbbc00;
-  --navy-2: #b8921f;
+  --navy: #f5b800;
+  --navy-2: #c89200;
 
   /* Highlight */
   --hl: #211d0b;
@@ -81,6 +81,11 @@
   --shadow-lg: 0 24px 50px -20px rgba(0, 0, 0, 0.95);
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   color-scheme: dark;
+}
+
+:root[data-theme='dark'] .primary,
+:root[data-theme='dark'] .nav-item.active {
+  color: #080808;
 }
 
 /* ---------- base ---------- */
@@ -607,6 +612,92 @@ input[type='checkbox']:checked::after {
   background-position: right 14px center;
 }
 
+.select option {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+:root[data-theme='dark'] .select {
+  color-scheme: dark;
+}
+
+.subject-select {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+}
+
+.subject-select-trigger {
+  width: 100%;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.subject-select-trigger > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subject-select-trigger:focus-visible {
+  border-color: var(--blue);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.subject-select-arrow {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-right: 1.5px solid var(--mute);
+  border-bottom: 1.5px solid var(--mute);
+  transform: rotate(45deg) translateY(-2px);
+}
+
+.subject-select-menu {
+  position: absolute;
+  z-index: 20;
+  bottom: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  box-shadow: var(--shadow-lg);
+}
+
+.subject-select-menu button {
+  width: 100%;
+  display: block;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.subject-select-menu button:hover,
+.subject-select-menu button.selected {
+  background: var(--hl);
+  color: var(--hl-ink);
+}
+
 /* ---------- bar / ring / stat ---------- */
 .bar {
   height: 8px;
@@ -788,7 +879,7 @@ input[type='checkbox']:checked::after {
 
 .admit-main {
   position: relative;
-  color: #fff;
+  color: var(--bg);
   background: var(--navy);
   padding: 24px;
   display: flex;
@@ -1134,7 +1225,6 @@ input[type='checkbox']:checked::after {
 .col small {
   font-size: 11.5px;
   font-weight: 600;
-  color: var(--mute);
 }
 
 .col small.on {
@@ -1156,7 +1246,7 @@ input[type='checkbox']:checked::after {
 .doit {
   position: relative;
   overflow: hidden;
-  padding: 22px 26px 20px;
+  padding: 22px 26px 26px;
   background:
     linear-gradient(135deg,
       rgba(255, 255, 255, 0.03),
@@ -1378,11 +1468,11 @@ input[type='checkbox']:checked::after {
 
 .paper-split .total {
   background: var(--navy);
-  color: #fff;
+  color: var(--bg);
 }
 
 .paper-split .total span {
-  color: #fff;
+  color: var(--bg);
   opacity: 0.75;
 }
 
@@ -1602,7 +1692,7 @@ input[type='checkbox']:checked::after {
 
 .filters button.on {
   background: var(--navy);
-  color: #fff;
+  color: var(--bg);
   border-color: var(--navy);
 }
 
@@ -1739,6 +1829,11 @@ input[type='checkbox']:checked::after {
 .review-chart-wrap .recharts-wrapper,
 .review-chart-wrap .recharts-surface {
   overflow: visible;
+}
+
+.review-chart-wrap .recharts-wrapper:focus,
+.review-chart-wrap .recharts-surface:focus {
+  outline: none;
 }
 
 .review-chart-wrap .recharts-cartesian-grid-horizontal line {
@@ -2155,7 +2250,7 @@ input[type='checkbox']:checked::after {
 .pill.on {
   background: var(--navy);
   border-color: var(--navy);
-  color: #fff;
+  color: var(--bg);
 }
 
 .pill:disabled {
@@ -2793,9 +2888,17 @@ tbody tr:hover td {
 }
 
 @media (max-width: 520px) {
+  .page {
+    gap: 14px;
+  }
+
   .grid4 {
     grid-template-columns: 1fr 1fr;
     gap: 10px;
+  }
+
+  .grid-main {
+    gap: 14px;
   }
 
   .grid-cards {
@@ -2812,6 +2915,19 @@ tbody tr:hover td {
 
   .card {
     padding: 16px;
+  }
+
+  .sec-head {
+    margin-bottom: 14px;
+  }
+
+  .next {
+    gap: 6px;
+  }
+
+  .next-item {
+    gap: 10px;
+    padding: 10px 12px;
   }
 
   .heat {
@@ -3777,6 +3893,3 @@ tbody tr:hover td {
     justify-self: center;
   }
 }
-
-
-

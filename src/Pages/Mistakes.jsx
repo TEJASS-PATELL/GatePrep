@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Head, Icon, NAMES, SUBJECT_COLORS, today, uid, ymd } from './shared.jsx';
+import { Dropdown, Head, Icon, NAMES, SUBJECT_COLORS, today, uid, ymd } from './shared.jsx';
 
 function Mistakes({ state, addMistake, deleteMistake }) {
   const [mf, setMf] = useState({
@@ -250,15 +250,12 @@ function Mistakes({ state, addMistake, deleteMistake }) {
 
           <form className="mistake-page-form" onSubmit={addNewMistake}>
             <div className="mistake-form-grid">
-              <select
-                className="select"
+              <Dropdown
+                ariaLabel="Mistake subject"
+                options={NAMES.map((name) => ({ value: name, label: name }))}
                 value={mf.subject}
-                onChange={(e) => setMf({ ...mf, subject: e.target.value })}
-              >
-                {NAMES.map((n) => (
-                  <option key={n} value={n}>{n}</option>
-                ))}
-              </select>
+                onChange={(subject) => setMf({ ...mf, subject })}
+              />
 
               <input
                 value={mf.topic}
@@ -266,16 +263,17 @@ function Mistakes({ state, addMistake, deleteMistake }) {
                 placeholder="Topic / question number"
               />
 
-              <select
-                className="select"
+              <Dropdown
+                ariaLabel="Mistake type"
+                options={[
+                  { value: 'silly', label: 'Silly / Calculation Error' },
+                  { value: 'concept', label: 'Conceptual Misunderstanding' },
+                  { value: 'formula', label: 'Forgot / Wrong Formula' },
+                  { value: 'time', label: 'Time Rush / Panic' }
+                ]}
                 value={mf.tag}
-                onChange={(e) => setMf({ ...mf, tag: e.target.value })}
-              >
-                <option value="silly">Silly / Calculation Error</option>
-                <option value="concept">Conceptual Misunderstanding</option>
-                <option value="formula">Forgot / Wrong Formula</option>
-                <option value="time">Time Rush / Panic</option>
-              </select>
+                onChange={(tag) => setMf({ ...mf, tag })}
+              />
             </div>
 
             <textarea
