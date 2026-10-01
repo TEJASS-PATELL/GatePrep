@@ -4,6 +4,7 @@ import './App.css';
 const KEY = 'gate-cse-react-v1'; // same key: existing progress is kept
 const EXAM_DEFAULT = '2027-02-06';
 const REV_ROUNDS = 1; // single revision pass per topic
+const REVIEW_INTERVALS = [1, 3, 7, 14, 30];
 const DEFAULT_TARGET_MIN = 55;
 const DEFAULT_TARGET_MAX = 60;
 const DEFAULT_WEEK_GOAL = 15;
@@ -265,6 +266,23 @@ const longDate = (s) =>
     year: 'numeric'
   });
 
+const dateAfter = (date, days) => {
+  const result = new Date(`${date}T00:00:00`);
+  result.setDate(result.getDate() + days);
+  return ymd(result);
+};
+
+const dateGap = (date, from = today()) =>
+  Math.round((new Date(`${date}T00:00:00`) - new Date(`${from}T00:00:00`)) / 864e5);
+
+const reviewLabel = (date) => {
+  const gap = dateGap(date);
+  if (gap < 0) return `${Math.abs(gap)}d overdue`;
+  if (gap === 0) return 'Due today';
+  if (gap === 1) return 'Due tomorrow';
+  return `Due in ${gap}d`;
+};
+
 const band = (v) => (v < 40 ? 'red' : v < 70 ? 'amber' : 'green');
 const targetLabel = (min, max) => `${fmt(min)}–${fmt(max)}`;
 
@@ -309,6 +327,7 @@ const blank = () => ({
           learn: Array(k).fill(false),
           pyq: Array(k).fill(false),
           rev: Array(k).fill(0),
+          reviewSchedule: Array(k).fill(null),
           weak: Array(k).fill(false)
         }
       ];
@@ -327,6 +346,22 @@ function normalize(p) {
       learn: s.learn.map((_, i) => Boolean(o.learn?.[i])),
       pyq: s.pyq.map((_, i) => Boolean(o.pyq?.[i])),
       rev: s.rev.map((_, i) => clamp(Number(o.rev?.[i] || 0), 0, REV_ROUNDS)),
+      reviewSchedule: s.reviewSchedule.map((_, i) => {
+        if (!s.learn[i]) return null;
+
+        const saved = o.reviewSchedule?.[i];
+        if (saved && /^\d{4}-\d{2}-\d{2}$/.test(saved.due)) {
+          return {
+            due: saved.due,
+            interval: clamp(Number(saved.interval) || 0, 0, REVIEW_INTERVALS.length - 1),
+            lastReviewed: /^\d{4}-\d{2}-\d{2}$/.test(saved.lastReviewed)
+              ? saved.lastReviewed
+              : ''
+          };
+        }
+
+        return { due: today(), interval: 0, lastReviewed: '' };
+      }),
       weak: s.weak.map((_, i) => Boolean(o.weak?.[i]))
     };
   });
@@ -2179,20 +2214,136 @@ function PYQs({ state, togglePYQ, bulkPYQ }) {
   );
 }
 
-function Revision({ state, toggleRev, bulkRev }) {
+function ReviewForecast({ state, onReview }) {
+  const forecast = Array(14).fill(0);
+  const due = NAMES.flatMap((name) =>
+    SUBJECTS[name].topics.flatMap((topic, index) => {
+      const schedule = state.subjects[name].reviewSchedule[index];
+      if (!state.subjects[name].learn[index] || !schedule) return [];
+
+      const gap = dateGap(schedule.due);
+      if (gap <= 0) forecast[0]++;
+      else if (gap < forecast.length) forecast[gap]++;
+
+      return gap <= 0 ? [{ name, topic, index, due: schedule.due }] : [];
+    })
+  ).sort((a, b) => a.due.localeCompare(b.due) || a.name.localeCompare(b.name));
+
+  const max = Math.max(1, ...forecast);
+  const totalDue = due.length;
+  const overdue = due.filter((item) => item.due < today()).length;
+  const nextDate = NAMES.flatMap((name) =>
+    state.subjects[name].reviewSchedule
+      .filter((schedule) => schedule && schedule.due > today())
+      .map((schedule) => schedule.due)
+  ).sort()[0];
+
+  return (
+    <section className="card review-forecast">
+      <div className="sec-head">
+        <div>
+          <span className="eyebrow">SPACED REPETITION</span>
+          <h2>Review forecast</h2>
+        </div>
+        <p>Reviews space out over 1, 3, 7, 14 and 30 days.</p>
+      </div>
+
+      <div className="review-stats">
+        <div><strong>{totalDue}</strong><span>Due now</span></div>
+        <div><strong>{overdue}</strong><span>Overdue</span></div>
+        <div><strong>{nextDate ? reviewLabel(nextDate) : '—'}</strong><span>next review</span></div>
+      </div>
+
+      <div className="review-chart-wrap">
+        <svg
+          className="review-chart"
+          viewBox="0 0 840 220"
+          role="img"
+          aria-label="Scheduled topic reviews over the next 14 days"
+          preserveAspectRatio="none"
+        >
+          {[0, 1, 2].map((line) => {
+            const y = 24 + line * 66;
+            return <line key={line} x1="28" x2="826" y1={y} y2={y} className="review-gridline" />;
+          })}
+          {forecast.map((count, index) => {
+            const slot = 798 / forecast.length;
+            const height = count ? Math.max(4, (count / max) * 132) : 0;
+            const x = 28 + index * slot + slot * 0.2;
+            const y = 156 - height;
+            const date = dateAfter(today(), index);
+
+            return (
+              <g key={date}>
+                <rect
+                  x={x}
+                  y={y}
+                  width={slot * 0.6}
+                  height={height}
+                  rx="5"
+                  className={`review-bar ${index === 0 ? 'today' : ''}`}
+                >
+                  <title>{`${date}: ${count} ${count === 1 ? 'review' : 'reviews'}`}</title>
+                </rect>
+                {count > 0 && (
+                  <text x={x + slot * 0.3} y={Math.max(14, y - 7)} textAnchor="middle" className="review-value">
+                    {count}
+                  </text>
+                )}
+                {(index % 2 === 0 || index === 13) && (
+                  <text x={x + slot * 0.3} y="186" textAnchor="middle" className="review-axis">
+                    {index === 0 ? 'Today' : new Date(`${date}T00:00:00`).toLocaleDateString('en', { day: 'numeric', month: 'short' })}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      <div className="review-queue-head">
+        <h3>Due now</h3>
+        <span>{totalDue} {totalDue === 1 ? 'topic' : 'topics'}</span>
+      </div>
+      {due.length ? (
+        <div className="review-queue">
+          {due.map((item) => (
+            <div className="review-queue-row" key={`${item.name}-${item.index}`}>
+              <div>
+                <strong>{item.topic}</strong>
+                <span>{item.name} · {reviewLabel(item.due)}</span>
+              </div>
+              <button className="primary" onClick={() => onReview(item.name, item.index)}>
+                Mark reviewed
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="review-empty">
+          Nothing due today{nextDate ? ` · next review ${longDate(nextDate)}` : ' · learn a topic to start your review schedule'}.
+        </p>
+      )}
+    </section>
+  );
+}
+
+function Revision({ state, completeReview, bulkRev }) {
   const m = overall(state);
 
   return (
     <>
       <Head
         title="Revision"
-        sub="One revision pass per topic. Tap again to undo."
+        sub="Review learned topics on a schedule that gradually spaces out."
       />
+
+      <ReviewForecast state={state} onReview={completeReview} />
 
       <section className="card banner">
         <div>
-          <h2>{m.rev}/{m.total} topics revised</h2>
-          <p>Revise a topic once, after you have learned it.</p>
+          <h2>{m.rev}/{m.total} first reviews complete</h2>
+          <p>Scheduled reviews continue after this progress milestone.</p>
           <Bar value={m.rp} tone="green" />
         </div>
         <Ring value={m.rp} size={110} stroke={10} label="revised" />
@@ -2228,15 +2379,11 @@ function Revision({ state, toggleRev, bulkRev }) {
                     className={`row rev ${d.rev[i] >= 1 ? 'done' : ''}`}
                   >
                     <span>{t}</span>
-                    <div className="rbtns">
-                      <button
-                        className={d.rev[i] >= 1 ? 'on' : ''}
-                        onClick={() => toggleRev(n, i, 1)}
-                        aria-pressed={d.rev[i] >= 1}
-                      >
-                        {d.rev[i] >= 1 ? 'Revised' : 'Revise'}
-                      </button>
-                    </div>
+                    <small className={`review-due ${!d.learn[i] ? 'locked' : ''}`}>
+                      {d.learn[i]
+                        ? reviewLabel(d.reviewSchedule[i]?.due || today())
+                        : 'Learn first'}
+                    </small>
                   </div>
                 ))}
               </div>
@@ -4137,7 +4284,24 @@ export default function App() {
     [edit]
   );
 
-  const toggleLearn = useMemo(() => flip('learn'), [flip]);
+  const toggleLearn = useCallback(
+    (name, i) =>
+      edit(name, (d) => {
+        const learned = !d.learn[i];
+        return {
+          ...d,
+          learn: d.learn.map((value, index) => index === i ? learned : value),
+          reviewSchedule: d.reviewSchedule.map((schedule, index) =>
+            index === i
+              ? learned
+                ? { due: dateAfter(today(), REVIEW_INTERVALS[0]), interval: 0, lastReviewed: '' }
+                : null
+              : schedule
+          )
+        };
+      }),
+    [edit]
+  );
   const togglePYQ = useMemo(() => flip('pyq'), [flip]);
   const toggleWeak = useMemo(() => flip('weak'), [flip]);
 
@@ -4145,7 +4309,12 @@ export default function App() {
     (n, v) =>
       edit(n, (d) => ({
         ...d,
-        learn: d.learn.map(() => v)
+        learn: d.learn.map(() => v),
+        reviewSchedule: d.reviewSchedule.map((schedule) =>
+          v
+            ? schedule || { due: dateAfter(today(), REVIEW_INTERVALS[0]), interval: 0, lastReviewed: '' }
+            : null
+        )
       })),
     [edit]
   );
@@ -4159,15 +4328,37 @@ export default function App() {
     [edit]
   );
 
-  const toggleRev = useCallback(
-    (n, i, r) =>
-      edit(n, (d) => ({
-        ...d,
-        rev: d.rev.map((v, x) =>
-          x === i ? (v >= r ? r - 1 : r) : v
-        )
-      })),
-    [edit]
+  const completeReview = useCallback(
+    (name, index) =>
+      setState((s) => {
+        const d = s.subjects[name];
+        const schedule = d.reviewSchedule[index];
+        if (!d.learn[index] || schedule?.lastReviewed === today()) return s;
+
+        const interval = Math.min(
+          (schedule?.interval || 0) + 1,
+          REVIEW_INTERVALS.length - 1
+        );
+        const nd = {
+          ...d,
+          rev: d.rev.map((value, i) => i === index ? REV_ROUNDS : value),
+          reviewSchedule: d.reviewSchedule.map((value, i) =>
+            i === index
+              ? {
+                due: dateAfter(today(), REVIEW_INTERVALS[interval]),
+                interval,
+                lastReviewed: today()
+              }
+              : value
+          )
+        };
+
+        return track(
+          { ...s, subjects: { ...s.subjects, [name]: nd } },
+          units(nd) - units(d)
+        );
+      }),
+    []
   );
 
   const bulkRev = useCallback(
@@ -4377,7 +4568,7 @@ export default function App() {
     revision: (
       <Revision
         state={state}
-        toggleRev={toggleRev}
+        completeReview={completeReview}
         bulkRev={bulkRev}
       />
     ),
