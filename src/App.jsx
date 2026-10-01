@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './App.css';
 
 const KEY = 'gate-cse-react-v1'; // same key: existing progress is kept
@@ -521,8 +521,8 @@ function overall(state) {
 
 /* ---------- priority / study-plan helpers ---------- */
 
-function nextAction(state, n) {
-  const d = state.subjects[n];
+function nextAction(subjects, n) {
+  const d = subjects[n];
 
   let i = d.learn.findIndex((v) => !v);
   if (i >= 0) {
@@ -674,25 +674,34 @@ function useTween(target, ms = 900) {
   const goal = Array.isArray(target) ? target : [target];
   const key = goal.join(',');
   const [val, setVal] = useState(() => goal.map(() => 0));
+  const current = useRef(goal.map(() => 0));
 
   useEffect(() => {
+    const targetValues = key.split(',').map(Number);
+
     if (reduced()) {
-      setVal(goal);
+      current.current = targetValues;
       return undefined;
     }
 
-    const from = val.length === goal.length ? val : goal.map(() => 0);
+    const from = current.current.length === targetValues.length
+      ? current.current
+      : targetValues.map(() => 0);
     const t0 = performance.now();
     let raf;
 
     const step = (t) => {
       const p = Math.min(1, (t - t0) / ms);
       const e = 1 - (1 - p) ** 3;
+      const next = targetValues.map((value, i) => from[i] + (value - from[i]) * e);
 
-      setVal(goal.map((g, i) => from[i] + (g - from[i]) * e));
+      current.current = next;
+      setVal(next);
 
       if (p < 1) {
         raf = requestAnimationFrame(step);
+      } else {
+        current.current = targetValues;
       }
     };
 
@@ -700,7 +709,8 @@ function useTween(target, ms = 900) {
     return () => cancelAnimationFrame(raf);
   }, [key, ms]);
 
-  return Array.isArray(target) ? val : val[0];
+  const shown = reduced() ? goal : val;
+  return Array.isArray(target) ? shown : shown[0];
 }
 
 function useCount(value, dur = 1.1) {
@@ -710,7 +720,6 @@ function useCount(value, dur = 1.1) {
   useEffect(() => {
     if (reduced()) {
       last.current = value;
-      setV(value);
       return undefined;
     }
 
@@ -738,7 +747,7 @@ function useCount(value, dur = 1.1) {
     return () => cancelAnimationFrame(raf);
   }, [value, dur]);
 
-  return v;
+  return reduced() ? value : v;
 }
 
 const Count = ({ to, dur }) => <>{Math.round(useCount(to, dur))}</>;
@@ -1059,26 +1068,23 @@ function RoseChart({ state }) {
 
   const vals = useTween(scores, 1000);
 
-  let cursor = -Math.PI / 2;
+  const slices = NAMES.reduce(
+    (acc, k, i) => {
+      const w = state.weights[k] || 0;
+      const span = (w / total) * Math.PI * 2;
+      const a0 = acc.cursor + GAP / 2;
+      const a1 = Math.max(acc.cursor + span - GAP / 2, a0 + 0.02);
 
-  const slices = NAMES.map((k, i) => {
-    const w = state.weights[k] || 0;
-    const span = (w / total) * Math.PI * 2;
-    const a0 = cursor + GAP / 2;
-    const a1 = Math.max(cursor + span - GAP / 2, a0 + 0.02);
-
-    cursor += span;
-
-    return {
-      k,
-      i,
-      w,
-      a0,
-      a1,
-      mid: (a0 + a1) / 2,
-      score: scores[i]
-    };
-  });
+      return {
+        cursor: acc.cursor + span,
+        items: [
+          ...acc.items,
+          { k, i, w, a0, a1, mid: (a0 + a1) / 2, score: scores[i] }
+        ]
+      };
+    },
+    { cursor: -Math.PI / 2, items: [] }
+  ).items;
 
   const pt = (r, t) => [C + r * Math.cos(t), C + r * Math.sin(t)];
 
@@ -1939,8 +1945,6 @@ const SubjectCard = memo(function SubjectCard({
   data,
   q,
   filter,
-  notes,
-  onOpenNote,
   onToggle,
   onWeak,
   onBulk
@@ -2012,8 +2016,6 @@ const SubjectCard = memo(function SubjectCard({
       <div className="topics">
         {show.map((i) => {
           const tName = SUBJECTS[name].topics[i];
-          const noteKey = `${name}::${tName}`;
-          const hasNote = Boolean(notes?.[noteKey]?.trim());
 
           return (
             <label
@@ -2099,7 +2101,6 @@ function Subjects({ state, toggleLearn, toggleWeak, bulkLearn }) {
             data={state.subjects[n]}
             q={query}
             filter={filter}
-            notes={state.notes}
             onToggle={toggleLearn}
             onWeak={toggleWeak}
             onBulk={bulkLearn}
@@ -2254,7 +2255,7 @@ function Priority({ state, addTask }) {
         const w = state.weights[n] || 0;
         const m = metrics(state.subjects[n], n);
         const risk = +(w * (1 - m.readiness / 100)).toFixed(1);
-        const act = nextAction(state, n);
+        const act = nextAction(state.subjects, n);
 
         return { n, w, m, risk, act };
       }).sort((a, b) => b.w - a.w),
@@ -2730,18 +2731,11 @@ function Focus({
 }
 
 /* Feature 2: Tests with Mistake Notebook */
-function Tests({ state, addMock, deleteMock, addMistake, deleteMistake }) {
+function Tests({ state, addMock, deleteMock }) {
   const [f, setF] = useState({
     name: '',
     score: '',
     date: today()
-  });
-
-  const [mf, setMf] = useState({
-    subject: NAMES[0],
-    topic: '',
-    tag: 'silly',
-    note: ''
   });
 
   const m = overall(state);
@@ -2777,38 +2771,10 @@ function Tests({ state, addMock, deleteMock, addMistake, deleteMistake }) {
     });
   };
 
-  const submitMistake = (e) => {
-    e.preventDefault();
-    if (!mf.note.trim()) return;
-
-    addMistake({
-      id: uid(),
-      subject: mf.subject,
-      topic: mf.topic.trim() || 'General',
-      tag: mf.tag,
-      note: mf.note.trim(),
-      date: today()
-    });
-
-    setMf({
-      subject: mf.subject,
-      topic: '',
-      tag: 'silly',
-      note: ''
-    });
-  };
-
-  const tagLabels = {
-    silly: 'Silly / Calc Error',
-    concept: 'Concept Gap',
-    formula: 'Formula Forgot',
-    time: 'Time Trap'
-  };
-
   return (
     <>
       <Head
-        title="Tests"
+        title="Mock Tests"
         sub={`Your mock scores over time, compared with your target range of ${targetLabel(
           state.targetMin,
           state.targetMax
@@ -4048,12 +4014,14 @@ export default function App() {
   useEffect(() => {
     if (!running) return undefined;
 
-    const id = setInterval(() => setNow(Date.now()), 250);
-    return () => clearInterval(id);
-  }, [running]);
+    let completed = false;
+    const id = setInterval(() => {
+      const currentTime = Date.now();
+      setNow(currentTime);
 
-  useEffect(() => {
-    if (running && secsLeft === 0) {
+      if (completed || currentTime < timer.endAt) return;
+      completed = true;
+
       addFocus(timer.mins, timer.subject);
 
       setTimer((t) => ({
@@ -4064,8 +4032,10 @@ export default function App() {
 
       setToast(`Session complete · ${timer.mins} min logged`);
       navigator.vibrate?.(300);
-    }
-  }, [running, secsLeft, addFocus, timer.mins, timer.subject]);
+    }, 250);
+
+    return () => clearInterval(id);
+  }, [running, timer.endAt, timer.mins, timer.subject, addFocus]);
 
   useEffect(() => {
     document.title = running
@@ -4442,8 +4412,6 @@ export default function App() {
         state={state}
         addMock={addMock}
         deleteMock={deleteMock}
-        addMistake={addMistake}
-        deleteMistake={deleteMistake}
       />
     ),
     mistakes: (
