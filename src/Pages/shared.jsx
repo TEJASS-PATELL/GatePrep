@@ -316,6 +316,7 @@ const blank = () => ({
   tasks: [],
   notes: {}, // Feature 1: Topic Quick Notes / Formulas
   mistakes: [], // Feature 2: Mistake Notebook (Error Log)
+  daybook: {},
   weights: { ...WEIGHTS },
   planDate: '',
   subjects: Object.fromEntries(
@@ -375,6 +376,40 @@ function normalize(p) {
         .map(([k, v]) => [k, Math.max(0, Number(v))])
     );
 
+  const daybook = Object.fromEntries(
+    Object.entries(obj(p.daybook))
+      .filter(([date, entry]) =>
+        /^\d{4}-\d{2}-\d{2}$/.test(date) &&
+        entry &&
+        typeof entry === 'object' &&
+        !Array.isArray(entry)
+      )
+      .map(([date, entry]) => [
+        date,
+        {
+          energy: clamp(Number(entry.energy) || 3, 1, 5),
+          availableMinutes: [45, 90, 150, 240].includes(Number(entry.availableMinutes))
+            ? Number(entry.availableMinutes)
+            : 90,
+          intention: String(entry.intention || '').slice(0, 180),
+          blocker: String(entry.blocker || '').slice(0, 180),
+          missionId: String(entry.missionId || '').slice(0, 200),
+          missionDone: Boolean(entry.missionDone),
+          habits: {
+            water: Boolean(entry.habits?.water),
+            movement: Boolean(entry.habits?.movement),
+            screenBreak: Boolean(entry.habits?.screenBreak)
+          },
+          win: String(entry.win || '').slice(0, 240),
+          tomorrow: String(entry.tomorrow || '').slice(0, 180),
+          winType: ['concept', 'practice', 'consistency', 'rest'].includes(entry.winType)
+            ? entry.winType
+            : '',
+          completed: Boolean(entry.completed)
+        }
+      ])
+  );
+
   const savedMin = Number(p.targetMin);
   const savedMax = Number(p.targetMax);
   const legacyTarget = Number(p.target);
@@ -414,6 +449,7 @@ function normalize(p) {
     focus: nums(p.focus),
     focusBy: nums(p.focusBy, NAMES),
     notes: obj(p.notes),
+    daybook,
     mistakes: (Array.isArray(p.mistakes) ? p.mistakes : []).map((m) => ({
       id: m.id || uid(),
       subject: String(m.subject || 'General'),
