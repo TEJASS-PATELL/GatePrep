@@ -1,4 +1,5 @@
 import { Bar, Col, Dropdown, Head, Icon, NAMES, PRESETS, SUBJECTS, SUBJECT_COLORS, Stat, clamp, clock, colorVar, hm, today, ymd } from './shared.jsx';
+import { BarChart, Bar as RechartsBar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart, Area, AreaChart } from 'recharts';
 
 function Focus({
   state,
@@ -19,6 +20,7 @@ function Focus({
   const len = 2 * Math.PI * R;
   const t = today();
 
+  // Last 7 days data
   const days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
@@ -42,6 +44,35 @@ function Focus({
     .slice(0, 6);
 
   const topSub = bySub[0]?.[1] || 1;
+
+  // Prepare chart data for last 7 days by subject
+  const chartData = days.map((day) => {
+    const dataPoint = {
+      date: day.label,
+      fullDate: day.k,
+      total: day.min,
+    };
+
+    // Add each subject's minutes for that day
+    NAMES.forEach((subject) => {
+      dataPoint[subject] = 0;
+    });
+
+    // Distribute subject minutes across days (this is a limitation of current data structure)
+    // We'll show daily totals and subject totals separately
+    return dataPoint;
+  });
+
+  // Subject-wise breakdown for last 7 days
+  const subjectWeekData = NAMES.map((subject) => {
+    const mins = state.focusBy[subject] || 0;
+    return {
+      subject: subject,
+      minutes: mins,
+      short: SUBJECTS[subject].short,
+      color: SUBJECT_COLORS[subject]
+    };
+  }).filter(x => x.minutes > 0).sort((a, b) => b.minutes - a.minutes);
 
   return (
     <>
@@ -222,6 +253,116 @@ function Focus({
           )}
         </section>
       </div>
+
+      {/* Charts Section */}
+      {subjectWeekData.length > 0 && (
+        <>
+          {/* Individual Subject Graphs */}
+          <div className="charts-grid">
+            {subjectWeekData.length > 0 && (
+              <section className="card">
+                <div className="sec-head">
+                  <div>
+                    <span className="eyebrow">SUBJECT BREAKDOWN</span>
+                    <h2>Individual subject focus time</h2>
+                  </div>
+                </div>
+
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart
+                    data={subjectWeekData}
+                    margin={{ top: 20, right: 30, left: 0, bottom: 60 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-300)" />
+                    <XAxis
+                      dataKey="short"
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                      tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
+                    />
+                    <YAxis
+                      label={{ value: 'Minutes', angle: -90, position: 'insideLeft' }}
+                      tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
+                    />
+                    <Tooltip
+                      formatter={(value) => `${Math.round(value)}m`}
+                      labelFormatter={(label) => `Subject: ${label}`}
+                      contentStyle={{
+                        backgroundColor: 'var(--bg-secondary)',
+                        border: '1px solid var(--gray-300)',
+                        borderRadius: '8px',
+                      }}
+                    />
+                    <RechartsBar
+                      dataKey="minutes"
+                      fill="var(--blue)"
+                      radius={[8, 8, 0, 0]}
+                    >
+                      {subjectWeekData.map((entry, index) => (
+                        <RechartsBar key={index} dataKey="minutes" fill={entry.color} />
+                      ))}
+                    </RechartsBar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </section>
+            )}
+
+            {/* Combined Subject Comparison */}
+            <section className="card">
+              <div className="sec-head">
+                <div>
+                  <span className="eyebrow">ALL SUBJECTS</span>
+                  <h2>Combined focus distribution</h2>
+                </div>
+              </div>
+
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart
+                  data={subjectWeekData}
+                  margin={{ top: 20, right: 30, left: 0, bottom: 60 }}
+                >
+                  <defs>
+                    {subjectWeekData.map((entry, index) => (
+                      <linearGradient key={`gradient-${index}`} id={`color-${index}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={entry.color} stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor={entry.color} stopOpacity={0}/>
+                      </linearGradient>
+                    ))}
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-300)" />
+                  <XAxis
+                    dataKey="short"
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
+                  />
+                  <YAxis
+                    label={{ value: 'Minutes', angle: -90, position: 'insideLeft' }}
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
+                  />
+                  <Tooltip
+                    formatter={(value) => `${Math.round(value)}m`}
+                    contentStyle={{
+                      backgroundColor: 'var(--bg-secondary)',
+                      border: '1px solid var(--gray-300)',
+                      borderRadius: '8px',
+                    }}
+                  />
+                  {subjectWeekData.map((entry, index) => (
+                    <Area
+                      key={index}
+                      type="monotone"
+                      dataKey="minutes"
+                      stroke={entry.color}
+                      fillOpacity={1}
+                      fill={`url(#color-${index})`}
+                    />
+                  ))}
+                </AreaChart>
+              </ResponsiveContainer>
+            </section>
+          </div>
+        </>
+      )}
     </>
   );
 }
