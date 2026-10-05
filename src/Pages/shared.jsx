@@ -19,7 +19,6 @@ const NAV = [
   ['focus', 'Focus'],
   ['tests', 'Tests'],
   ['mistakes', 'Mistakes'],
-  ['recall', 'Recall'],
   ['settings', 'Settings']
 ];
 const SYLLABUS_URL = 'https://gate2027.iitm.ac.in/exam_papers_and_syllabus';

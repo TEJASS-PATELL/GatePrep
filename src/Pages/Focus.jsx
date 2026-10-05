@@ -1,5 +1,5 @@
-import { Bar, Col, Dropdown, Head, Icon, NAMES, PRESETS, SUBJECTS, SUBJECT_COLORS, Stat, clamp, clock, colorVar, hm, today, ymd } from './shared.jsx';
-import { BarChart, Bar as RechartsBar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart, Area, AreaChart } from 'recharts';
+import { Dropdown, Head, Icon, NAMES, PRESETS, SUBJECTS, SUBJECT_COLORS, Stat, clamp, clock, colorVar, hm, today, ymd } from './shared.jsx';
+import { Area, AreaChart, Bar as RechartsBar, BarChart, CartesianGrid, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 function Focus({
   state,
@@ -14,7 +14,12 @@ function Focus({
 }) {
   const idle = !running && !timer.paused;
   const total = timer.mins * 60;
-  const done = clamp(1 - secsLeft / total, 0, 1);
+  const elapsedSecs = running || timer.paused
+    ? Math.max(0, total - secsLeft)
+    : 0;
+  const ringProgress = (running || timer.paused) && total > 0
+    ? clamp(1 - secsLeft / total, 0, 1)
+    : 0;
 
   const R = 118;
   const len = 2 * Math.PI * R;
@@ -29,13 +34,17 @@ function Focus({
     return {
       k,
       label: d.toLocaleDateString('en-IN', { weekday: 'short' }).slice(0, 2),
+      fullLabel: d.toLocaleDateString('en-IN', { weekday: 'long' }),
       min: state.focus[k] || 0,
       now: k === t
     };
   });
 
-  const peak = Math.max(60, ...days.map((d) => d.min));
   const weekMin = days.reduce((a, d) => a + d.min, 0);
+  const dailyAverage = Math.round(weekMin / days.length);
+  const bestDay = days.reduce((best, day) => day.min > best.min ? day : best, days[0]);
+  const peakDay = Math.max(1, ...days.map((day) => day.min));
+  const activeDays = days.filter((day) => day.min > 0).length;
   const allMin = Object.values(state.focus).reduce((a, x) => a + x, 0);
 
   const bySub = Object.entries(state.focusBy)
@@ -43,45 +52,30 @@ function Focus({
     .sort((a, b) => b[1] - a[1])
     .slice(0, 6);
 
-  const topSub = bySub[0]?.[1] || 1;
+  const weeklyTrend = days.map((day) => ({
+    day: day.label,
+    minutes: day.min,
+    fullDate: new Date(`${day.k}T00:00:00`).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short'
+    })
+  }));
 
-  // Prepare chart data for last 7 days by subject
-  const chartData = days.map((day) => {
-    const dataPoint = {
-      date: day.label,
-      fullDate: day.k,
-      total: day.min,
-    };
-
-    // Add each subject's minutes for that day
-    NAMES.forEach((subject) => {
-      dataPoint[subject] = 0;
-    });
-
-    // Distribute subject minutes across days (this is a limitation of current data structure)
-    // We'll show daily totals and subject totals separately
-    return dataPoint;
-  });
-
-  // Subject-wise breakdown for last 7 days
-  const subjectWeekData = NAMES.map((subject) => {
-    const mins = state.focusBy[subject] || 0;
-    return {
-      subject: subject,
-      minutes: mins,
-      short: SUBJECTS[subject].short,
-      color: SUBJECT_COLORS[subject]
-    };
-  }).filter(x => x.minutes > 0).sort((a, b) => b.minutes - a.minutes);
+  const subjectShare = bySub.map(([name, minutes]) => ({
+    subject: name,
+    short: SUBJECTS[name].short,
+    minutes,
+    color: SUBJECT_COLORS[name]
+  }));
 
   return (
-    <>
+    <div className="focus-page">
       <Head
         title="Focus"
         sub="Run a timed session. Finished minutes are logged by subject."
       />
 
-      <div className="grid4">
+      <div className="grid4 focus-stats">
         <Stat
           label="Today"
           value={hm(state.focus[t] || 0)}
@@ -112,8 +106,14 @@ function Focus({
         />
       </div>
 
-      <div className="grid2">
-        <section className="card timer">
+      <div className="grid2 focus-main-grid">
+        <section className="card timer focus-timer-card">
+          <div className="focus-timer-heading">
+            <span className="eyebrow">{running ? 'SESSION IN PROGRESS' : timer.paused ? 'SESSION PAUSED' : 'YOUR FOCUS SESSION'}</span>
+            <h2>{timer.subject || 'Make this time count'}</h2>
+            <p>{timer.subject ? 'A little progress adds up.' : 'Choose a subject or start a quiet focus session.'}</p>
+          </div>
+
           <div className="timer-ring">
             <svg
               viewBox="0 0 280 280"
@@ -135,8 +135,10 @@ function Focus({
                 className="timer-val"
                 fill="none"
                 strokeWidth="12"
+                strokeLinecap="round"
                 strokeDasharray={len}
-                strokeDashoffset={len * (1 - done)}
+                strokeDashoffset={len * (1 - ringProgress)}
+                stroke="var(--navy)"
                 transform="rotate(-90 140 140)"
               />
             </svg>
@@ -149,6 +151,23 @@ function Focus({
                     ? 'Paused'
                     : 'Ready'}
               </span>
+            </div>
+          </div>
+
+          <div
+            className="focus-session-progress"
+            role="progressbar"
+            aria-label="Focus session progress"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(ringProgress * 100)}
+          >
+            <div className="focus-progress-copy">
+              <span>{hm(Math.floor(elapsedSecs / 60))} focused</span>
+              <span>{Math.round(ringProgress * 100)}% complete</span>
+            </div>
+            <div className="focus-progress-track">
+              <span style={{ width: `${ringProgress * 100}%` }} />
             </div>
           </div>
 
@@ -203,167 +222,201 @@ function Focus({
           </div>
         </section>
 
-        <section className="card">
+        <section className="card focus-week-card">
           <div className="sec-head">
             <div>
-              <span className="eyebrow">LAST 7 DAYS</span>
-              <h2>Focus minutes</h2>
+              <span className="eyebrow">YOUR ACTIVITY</span>
+              <h2>Focus this week</h2>
             </div>
-            <p>{hm(weekMin)} this week.</p>
+            <span className="focus-week-total">{hm(weekMin)}<small> total</small></span>
           </div>
 
-          <div className="cols tall">
-            {days.map((d) => (
-              <Col
-                key={d.k}
-                pct={(d.min / peak) * 100}
-                label={d.label}
-                on={d.now}
-                title={`${d.k}: ${hm(d.min)}`}
-              />
-            ))}
-          </div>
-
-          <div className="sec-head sub-head">
-            <div>
-              <span className="eyebrow">BY SUBJECT</span>
-              <h2>Where the time goes</h2>
-            </div>
-          </div>
-
-          {bySub.length ? (
-            <div className="sub-list">
-              {bySub.map(([n, v]) => (
-                <div className="sub-row" key={n} style={colorVar(n)}>
-                  <span className="r-name">{n}</span>
-                  <Bar
-                    value={(v / topSub) * 100}
-                    color={SUBJECT_COLORS[n]}
+          <div className="focus-chart-wrap focus-week-chart">
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={weeklyTrend} margin={{ top: 12, right: 12, left: -8, bottom: 0 }}>
+                <CartesianGrid vertical={false} stroke="var(--line)" strokeDasharray="3 6" />
+                <XAxis
+                  dataKey="day"
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: 'var(--mute)', fontSize: 12 }}
+                  tickMargin={10}
+                />
+                <YAxis
+                  allowDecimals={false}
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: 'var(--mute)', fontSize: 11 }}
+                  tickFormatter={(value) => `${value}m`}
+                  width={48}
+                />
+                {dailyAverage > 0 && (
+                  <ReferenceLine
+                    y={dailyAverage}
+                    stroke="var(--teal)"
+                    strokeDasharray="5 5"
+                    strokeOpacity={0.75}
                   />
-                  <span className="r-pct">{hm(v)}</span>
+                )}
+                <Tooltip
+                  formatter={(value) => [`${Math.round(value)} min`, 'Focus']}
+                  labelFormatter={(label, payload) => payload?.[0]?.payload?.fullDate || label}
+                  cursor={{ stroke: 'var(--line)', strokeDasharray: '4 4' }}
+                  contentStyle={{
+                    background: 'var(--paper)',
+                    border: '1px solid var(--line)',
+                    borderRadius: '12px',
+                    boxShadow: 'var(--shadow)',
+                    color: 'var(--ink)'
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="minutes"
+                  stroke="var(--blue)"
+                  strokeWidth={3}
+                  fill="var(--blue)"
+                  fillOpacity={0.1}
+                  activeDot={{ r: 5, fill: 'var(--paper)', stroke: 'var(--blue)', strokeWidth: 3 }}
+                  dot={{ r: 3, fill: 'var(--paper)', stroke: 'var(--blue)', strokeWidth: 2 }}
+                  isAnimationActive
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="focus-week-daily">
+            <div className="focus-week-daily-heading">
+              <strong>Daily breakdown</strong>
+              <span>{activeDays} of 7 active days</span>
+            </div>
+            <div className="focus-week-days">
+              {days.map((day) => (
+                <div
+                  className={`focus-week-day ${day.now ? 'is-today' : ''} ${day.min > 0 ? 'has-focus' : ''}`}
+                  key={day.k}
+                  title={`${day.k}: ${hm(day.min)} focused`}
+                >
+                  <span>{day.fullLabel}</span>
+                  <strong>{hm(day.min)}</strong>
+                  <div className="focus-week-day-track" aria-hidden="true">
+                    <span style={{ height: `${Math.max(day.min > 0 ? 12 : 0, (day.min / peakDay) * 100)}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="focus-week-insights">
+            <div>
+              <span>Daily average</span>
+              <strong>{hm(dailyAverage)}</strong>
+            </div>
+            <div>
+              <span>Best day</span>
+              <strong>{bestDay.min ? `${bestDay.label} · ${hm(bestDay.min)}` : '—'}</strong>
+            </div>
+            <div>
+              <span>Today</span>
+              <strong>{hm(state.focus[t] || 0)}</strong>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div className="focus-graphs">
+        <section className="card focus-chart-card">
+          <div className="sec-head">
+            <div>
+              <span className="eyebrow">SUBJECT BREAKDOWN</span>
+              <h2>Where your focus goes</h2>
+            </div>
+            <p>All-time focus by subject</p>
+          </div>
+
+          {subjectShare.length > 0 ? (
+            <div className="focus-chart-wrap focus-subject-chart">
+              <ResponsiveContainer width="100%" height={Math.max(210, subjectShare.length * 42)}>
+                <BarChart
+                  data={subjectShare}
+                  layout="vertical"
+                  margin={{ top: 2, right: 16, left: 2, bottom: 2 }}
+                >
+                  <CartesianGrid horizontal={false} stroke="var(--line)" strokeDasharray="3 6" />
+                  <XAxis
+                    type="number"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: 'var(--mute)', fontSize: 11 }}
+                    tickFormatter={(value) => `${value}m`}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="short"
+                    width={48}
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: 'var(--mute)', fontSize: 12 }}
+                  />
+                  <Tooltip
+                    formatter={(value) => [`${Math.round(value)} min`, 'Focus']}
+                    labelFormatter={(label) => `Subject · ${label}`}
+                    cursor={{ fill: 'var(--paper-2)' }}
+                    contentStyle={{
+                      background: 'var(--paper)',
+                      border: '1px solid var(--line)',
+                      borderRadius: '12px',
+                      boxShadow: 'var(--shadow)',
+                      color: 'var(--ink)'
+                    }}
+                  />
+                  <RechartsBar dataKey="minutes" radius={[0, 8, 8, 0]} barSize={18}>
+                    {subjectShare.map((entry) => (
+                      <Cell key={entry.subject} fill={entry.color} />
+                    ))}
+                  </RechartsBar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="focus-empty">
+              <span className="focus-empty-mark"><Icon name="chart" size={20} /></span>
+              <div>
+                <strong>Your subject chart starts here</strong>
+                <p>Choose a subject before starting a session to see where your focus goes.</p>
+              </div>
+            </div>
+          )}
+        </section>
+
+        <section className="card focus-subject-list-card">
+          <div className="sec-head">
+            <div>
+              <span className="eyebrow">TOP SUBJECTS</span>
+              <h2>Your focus mix</h2>
+            </div>
+          </div>
+          {bySub.length ? (
+            <div className="focus-subject-list">
+              {bySub.map(([name, minutes], index) => (
+                <div className="focus-subject-row" key={name} style={colorVar(name)}>
+                  <span className="focus-subject-rank">{String(index + 1).padStart(2, '0')}</span>
+                  <span className="focus-subject-name">{name}</span>
+                  <span className="focus-subject-time">{hm(minutes)}</span>
+                  <div className="focus-subject-track">
+                    <span style={{ width: `${Math.max(3, (minutes / bySub[0][1]) * 100)}%` }} />
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="empty">
-              <span>
-                Pick a subject before a session to see the split here.
-              </span>
+            <div className="focus-empty focus-empty-compact">
+              <p>No subject sessions logged yet.</p>
             </div>
           )}
         </section>
       </div>
-
-      {/* Charts Section */}
-      {subjectWeekData.length > 0 && (
-        <>
-          {/* Individual Subject Graphs */}
-          <div className="charts-grid">
-            {subjectWeekData.length > 0 && (
-              <section className="card">
-                <div className="sec-head">
-                  <div>
-                    <span className="eyebrow">SUBJECT BREAKDOWN</span>
-                    <h2>Individual subject focus time</h2>
-                  </div>
-                </div>
-
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart
-                    data={subjectWeekData}
-                    margin={{ top: 20, right: 30, left: 0, bottom: 60 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-300)" />
-                    <XAxis
-                      dataKey="short"
-                      angle={-45}
-                      textAnchor="end"
-                      height={80}
-                      tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
-                    />
-                    <YAxis
-                      label={{ value: 'Minutes', angle: -90, position: 'insideLeft' }}
-                      tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
-                    />
-                    <Tooltip
-                      formatter={(value) => `${Math.round(value)}m`}
-                      labelFormatter={(label) => `Subject: ${label}`}
-                      contentStyle={{
-                        backgroundColor: 'var(--bg-secondary)',
-                        border: '1px solid var(--gray-300)',
-                        borderRadius: '8px',
-                      }}
-                    />
-                    <RechartsBar
-                      dataKey="minutes"
-                      fill="var(--blue)"
-                      radius={[8, 8, 0, 0]}
-                    >
-                      {subjectWeekData.map((entry, index) => (
-                        <RechartsBar key={index} dataKey="minutes" fill={entry.color} />
-                      ))}
-                    </RechartsBar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </section>
-            )}
-
-            {/* Combined Subject Comparison */}
-            <section className="card">
-              <div className="sec-head">
-                <div>
-                  <span className="eyebrow">ALL SUBJECTS</span>
-                  <h2>Combined focus distribution</h2>
-                </div>
-              </div>
-
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart
-                  data={subjectWeekData}
-                  margin={{ top: 20, right: 30, left: 0, bottom: 60 }}
-                >
-                  <defs>
-                    {subjectWeekData.map((entry, index) => (
-                      <linearGradient key={`gradient-${index}`} id={`color-${index}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={entry.color} stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor={entry.color} stopOpacity={0}/>
-                      </linearGradient>
-                    ))}
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-300)" />
-                  <XAxis
-                    dataKey="short"
-                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
-                  />
-                  <YAxis
-                    label={{ value: 'Minutes', angle: -90, position: 'insideLeft' }}
-                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
-                  />
-                  <Tooltip
-                    formatter={(value) => `${Math.round(value)}m`}
-                    contentStyle={{
-                      backgroundColor: 'var(--bg-secondary)',
-                      border: '1px solid var(--gray-300)',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  {subjectWeekData.map((entry, index) => (
-                    <Area
-                      key={index}
-                      type="monotone"
-                      dataKey="minutes"
-                      stroke={entry.color}
-                      fillOpacity={1}
-                      fill={`url(#color-${index})`}
-                    />
-                  ))}
-                </AreaChart>
-              </ResponsiveContainer>
-            </section>
-          </div>
-        </>
-      )}
-    </>
+    </div>
   );
 }
 

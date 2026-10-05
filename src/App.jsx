@@ -9,7 +9,6 @@ import Plan from './Pages/StudyPlan.jsx';
 import Focus from './Pages/Focus.jsx';
 import Tests from './Pages/Tests.jsx';
 import Mistakes from './Pages/Mistakes.jsx';
-import Recall from './Pages/Recall.jsx';
 import Settings from './Pages/Settings.jsx';
 import { Icon, KEY, NAV, REVIEW_INTERVALS, REV_ROUNDS, blank, clock, dateAfter, generatePlan, load, regenerateIfNeeded, today, track, uid, units, usePageIn, ymd } from './Pages/shared.jsx';
 
@@ -68,33 +67,6 @@ export default function App() {
     setPage(id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
-
-  useEffect(() => {
-    const onKey = (e) => {
-      if (
-        e.ctrlKey ||
-        e.metaKey ||
-        e.altKey ||
-        /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)
-      ) {
-        return;
-      }
-
-      const n = Number(e.key);
-
-      if (n >= 1 && n <= NAV.length) {
-        go(NAV[n - 1][0]);
-      } else if (e.key === 't') {
-        setState((s) => ({
-          ...s,
-          dark: !s.dark
-        }));
-      }
-    };
-
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [go]);
 
   /* ----- focus timer ----- */
 
@@ -195,12 +167,41 @@ export default function App() {
     go('focus');
   }, [go, idle]);
 
-  const pause = () =>
+  const pause = useCallback(() =>
     setTimer((t) => ({
       ...t,
       endAt: 0,
       paused: Math.max(1, Math.ceil((t.endAt - Date.now()) / 1000))
-    }));
+    })), []);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (
+        e.ctrlKey ||
+        e.metaKey ||
+        e.altKey ||
+        /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)
+      ) {
+        return;
+      }
+
+      const n = Number(e.key);
+
+      if (n >= 1 && n <= NAV.length) {
+        go(NAV[n - 1][0]);
+      } else if (e.key === 't') {
+        setState((s) => ({
+          ...s,
+          dark: !s.dark
+        }));
+      } else if (e.key === 'Escape' && running) {
+        pause();
+      }
+    };
+
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [go, pause, running]);
 
   const stop = () => {
     const mins = Math.floor((timer.mins * 60 - secsLeft) / 60);
@@ -459,14 +460,6 @@ export default function App() {
     }));
   }, []);
 
-  const deleteNote = useCallback((key) => {
-    setState((s) => {
-      const notes = { ...s.notes };
-      delete notes[key];
-      return { ...s, notes };
-    });
-  }, []);
-
   /* Feature 2 action: Mistake notebook */
   const addMistake = useCallback((mistake) => {
     setState((s) => ({
@@ -579,14 +572,6 @@ export default function App() {
         state={state}
         addMistake={addMistake}
         deleteMistake={deleteMistake}
-      />
-    ),
-    recall: (
-      <Recall
-        state={state}
-        saveNote={saveNote}
-        deleteNote={deleteNote}
-        go={go}
       />
     ),
     settings: (
