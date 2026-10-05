@@ -308,7 +308,6 @@ input:not([type='checkbox']) {
   background: linear-gradient(135deg, var(--navy), var(--navy-2));
   color: #fff;
   font-weight: 600;
-  box-shadow: 0 8px 18px -14px rgba(49, 88, 212, 0.7);
 }
 
 .theme-btn {
@@ -6832,5 +6831,19 @@ tbody tr:hover td {
   .attempt-response-card {
     min-height: 0;
     padding: 16px;
+  }
+}
+
+.day-short {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .day-full {
+    display: none;
+  }
+
+  .day-short {
+    display: inline;
   }
 }

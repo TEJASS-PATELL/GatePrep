@@ -290,17 +290,29 @@ function Focus({
               <strong>Daily breakdown</strong>
               <span>{activeDays} of 7 active days</span>
             </div>
+
             <div className="focus-week-days">
               {days.map((day) => (
                 <div
-                  className={`focus-week-day ${day.now ? 'is-today' : ''} ${day.min > 0 ? 'has-focus' : ''}`}
+                  className={`focus-week-day ${day.now ? 'is-today' : ''} ${day.min > 0 ? 'has-focus' : ''
+                    }`}
                   key={day.k}
                   title={`${day.k}: ${hm(day.min)} focused`}
                 >
-                  <span>{day.fullLabel}</span>
+                  <span className="day-full">{day.fullLabel}</span>
+                  <span className="day-short">{day.fullLabel.slice(0, 3)}</span>
+
                   <strong>{hm(day.min)}</strong>
+
                   <div className="focus-week-day-track" aria-hidden="true">
-                    <span style={{ height: `${Math.max(day.min > 0 ? 12 : 0, (day.min / peakDay) * 100)}%` }} />
+                    <span
+                      style={{
+                        height: `${Math.max(
+                          day.min > 0 ? 12 : 0,
+                          (day.min / peakDay) * 100
+                        )}%`,
+                      }}
+                    />
                   </div>
                 </div>
               ))}
