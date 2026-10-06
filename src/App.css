@@ -6847,3 +6847,127 @@ tbody tr:hover td {
     display: inline;
   }
 }
+
+
+/* App.css ke end me paste karo. Solid colors only, no gradients.
+   --accent / --muted / --line tumhare theme variables hain to wahi use honge,
+   warna fallback colors chalenge. */
+
+.weightage-card .wt-table {
+  margin-top: 4px;
+}
+
+.wt-badge {
+  font-size: 0.78rem;
+  padding: 4px 10px;
+  border: 1px solid var(--blue);
+  color: var(--blue);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.wt-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.wt-table th {
+  padding: 6px 8px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  text-align: right;
+  color: var(--muted, #8a8f98);
+  border-bottom: 1px solid var(--line, rgba(128, 128, 128, 0.25));
+}
+
+.wt-table td {
+  padding: 8px;
+  text-align: right;
+  border-bottom: 1px solid var(--line, rgba(128, 128, 128, 0.15));
+}
+
+.wt-table th:first-child,
+.wt-table td:first-child {
+  text-align: left;
+}
+
+.wt-table th.wt-barcol,
+.wt-table td.wt-barcell {
+  width: 36%;
+  text-align: left;
+}
+
+.wt-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wt-track {
+  position: relative;
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(128, 128, 128, 0.18);
+  overflow: hidden;
+}
+
+.wt-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 4px;
+  background: var(--blue);
+  transform-origin: left center;
+  animation: wt-grow 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.wt-val {
+  min-width: 2.4em;
+  font-weight: 600;
+}
+
+.wt-total td {
+  font-weight: 600;
+  border-bottom: 0;
+}
+
+.wt-year {
+  display: block;
+  font-size: 0.68rem;
+  line-height: 1.2;
+  color: var(--muted, #8a8f98);
+  white-space: nowrap;
+}
+
+.wt-note {
+  margin: 12px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--muted, #8a8f98);
+}
+
+@keyframes wt-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .wt-table {
+    font-size: 0.84rem;
+  }
+  .wt-hide-sm {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wt-fill {
+    animation: none;
+  }
+}

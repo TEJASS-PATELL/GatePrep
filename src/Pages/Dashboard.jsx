@@ -1,6 +1,242 @@
 import { useMemo } from 'react';
 import { Bar, Count, DEFAULT_WEEK_GOAL, Heatmap, Icon, NAMES, ReadinessByArea, Ring, RoseChart, SUBJECTS, SYLLABUS_URL, Stat, WeekCard, daysLeft, fmt, hm, longDate, metrics, overall, pct, targetLabel, targetStatus, today, ymd } from './shared.jsx';
 
+const WEIGHTAGE_YEAR_COUNT = 15;
+const WEIGHTAGE_YEARS = '2012–2026';
+
+/*
+ * 15-year GATE CSE weightage compilation: 2012–2026.
+ *
+ * Main historical marks source:
+ *   ACE Engineering Academy's published year-wise CSE table (2012–2026).
+ *
+ * Important:
+ * - GATE/IIT does NOT publish an official subject-wise historical weightage table.
+ *   These figures are third-party classifications of past papers.
+ * - ACE labels the 13–23-ish mathematics row as "Discrete Maths"; its values are
+ *   clearly a combined Engineering + Discrete bucket in the published 100-mark
+ *   table, so the dashboard labels it "Engineering Maths + Discrete".
+ * - Programming & Data Structures = Programming Languages + Data Structures
+ *   from the same source.
+ * - qRange is an APPROXIMATE question-count range derived from marks:
+ *     minimum questions = ceil(minMarks / 2)
+ *     maximum questions = maxMarks
+ *   It is NOT a claim that those exact question counts occurred in those
+ *   min/max years.
+ * - General Aptitude is fixed at 15 marks / 10 questions in the exam pattern,
+ *   so it is kept separate from the derived qRange rule.
+ */
+const WEIGHTAGE = [
+  {
+    name: 'General Aptitude',
+    avg: 15.0,
+    min: 15,
+    max: 15,
+    minYear: '2012–2026',
+    maxYear: '2012–2026',
+    qRange: '10'
+  },
+  {
+    name: 'Engineering Maths + Discrete',
+    avg: 16.3,
+    min: 13,
+    max: 23,
+    minYear: '2013, 2024, 2026',
+    maxYear: '2014, 2015',
+    qRange: '7–23'
+  },
+  {
+    name: 'Computer Organization',
+    avg: 9.8,
+    min: 4,
+    max: 13,
+    minYear: '2019',
+    maxYear: '2013, 2020',
+    qRange: '2–13'
+  },
+  {
+    name: 'Programming & Data Structures',
+    avg: 10.5,
+    min: 6,
+    max: 15,
+    minYear: '2021',
+    maxYear: '2020',
+    qRange: '3–15'
+  },
+  {
+    name: 'Operating Systems',
+    avg: 8.1,
+    min: 6,
+    max: 10,
+    minYear: '2015, 2017, 2024',
+    maxYear: '2012, 2013, 2019, 2020',
+    qRange: '3–10'
+  },
+  {
+    name: 'Computer Networks',
+    avg: 8.3,
+    min: 6,
+    max: 11,
+    minYear: '2013, 2020, 2025',
+    maxYear: '2022',
+    qRange: '3–11'
+  },
+  {
+    name: 'Algorithms',
+    avg: 7.9,
+    min: 3,
+    max: 11,
+    minYear: '2020',
+    maxYear: '2016, 2021',
+    qRange: '2–11'
+  },
+  {
+    name: 'Theory of Computation',
+    avg: 7.7,
+    min: 6,
+    max: 10,
+    minYear: '2014, 2015, 2019, 2026',
+    maxYear: '2017',
+    qRange: '3–10'
+  },
+  {
+    name: 'Databases',
+    avg: 7.5,
+    min: 4,
+    max: 11,
+    minYear: '2016',
+    maxYear: '2012',
+    qRange: '2–11'
+  },
+  {
+    name: 'Compiler Design',
+    avg: 4.7,
+    min: 2,
+    max: 8,
+    minYear: '2012',
+    maxYear: '2021',
+    qRange: '1–8'
+  },
+  {
+    name: 'Digital Logic',
+    avg: 4.3,
+    min: 1,
+    max: 7,
+    minYear: '2012',
+    maxYear: '2019',
+    qRange: '1–7'
+  }
+];
+
+const WEIGHTAGE_MAX = Math.max(...WEIGHTAGE.map((s) => s.avg));
+
+function WeightageCard() {
+  return (
+    <section className="card weightage-card">
+      <div className="sec-head">
+        <div>
+          <span className="eyebrow">EXAM WEIGHTAGE</span>
+          <h2>Marks and questions by subject</h2>
+        </div>
+        <span className="wt-badge">
+          {WEIGHTAGE_YEAR_COUNT} years of papers · {WEIGHTAGE_YEARS}
+        </span>
+      </div>
+
+      <table className="wt-table">
+        <thead>
+          <tr>
+            <th scope="col">Subject</th>
+            <th scope="col" className="wt-barcol">
+              15-year avg.
+            </th>
+            <th scope="col">Min</th>
+            <th scope="col">Max</th>
+            <th scope="col">Approx. Q range</th>
+          </tr>
+        </thead>
+        <tbody>
+          {WEIGHTAGE.map((s, i) => (
+            <tr key={s.name}>
+              <td>{s.name}</td>
+              <td className="wt-barcell">
+                <div className="wt-bar">
+                  <div className="wt-track">
+                    <i
+                      className="wt-fill"
+                      style={{
+                        width: `${(s.avg / WEIGHTAGE_MAX) * 100}%`,
+                        animationDelay: `${i * 45}ms`
+                      }}
+                    />
+                  </div>
+                  <b className="wt-val">{s.avg.toFixed(1)}</b>
+                </div>
+              </td>
+              <td>
+                {s.min}
+                <span className="wt-year">{s.minYear}</span>
+              </td>
+              <td>
+                {s.max}
+                <span className="wt-year">{s.maxYear}</span>
+              </td>
+              <td>~{s.qRange}</td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr className="wt-total">
+            <td>Total</td>
+            <td className="wt-barcell">100 marks</td>
+            <td />
+            <td />
+            <td>65</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <p className="wt-note">
+        Note: This table covers 15 GATE CSE editions, 2012–2026. The marks are
+        a published third-party historical compilation, not an official IIT
+        subject-wise weightage table. The source groups Engineering Mathematics
+        with Discrete Mathematics in the high-level mathematics bucket used here,
+        and Programming &amp; Data Structures combines the programming-language
+        and data-structure rows. Min/max years show where the reported extrema
+        occur in this compilation. “Approx. Q range” is derived from the marks
+        range (1- or 2-mark questions), so it is a planning range rather than
+        an exact historical question-count range. 2026 is included; for recent
+        years, published shift-wise analyses and the official paper/key should
+        be preferred when exact per-shift classification matters. Sources:{' '}
+        <a
+          href="https://www.aceenggacademy.com/gate-computer-science-engineering-syllabus/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          ACE Engineering Academy (2012–2026)
+        </a>
+        ,{' '}
+        <a
+          href="https://www.geeksforgeeks.org/gate/subject-wise-weightage-for-gate-cs/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          GeeksforGeeks (recent year-wise analysis)
+        </a>
+        , and{' '}
+        <a
+          href="https://gate2026.iitg.ac.in/QPs-answer-keys.html"
+          target="_blank"
+          rel="noreferrer"
+        >
+          GATE 2026 official papers/answer keys
+        </a>
+        . Weightage indicates historical trend, not a guarantee for GATE 2027.
+      </p>
+    </section>
+  );
+}
+
 function Dashboard({ state, go, toggleLearn, streak, setName, beginSprint, focusBusy }) {
   const m = overall(state);
   const left = daysLeft(state.exam);
@@ -266,19 +502,21 @@ function Dashboard({ state, go, toggleLearn, streak, setName, beginSprint, focus
           <div className="paper-split">
             <div>
               <b>15</b>
-              <span>General Aptitude</span>
+              <span>General Aptitude · 10 questions</span>
             </div>
             <div>
               <b>85</b>
-              <span>Technical subjects (CS &amp; IT)</span>
+              <span>Technical subjects (CS &amp; IT) · 55 questions</span>
             </div>
             <div className="total">
               <b>100</b>
-              <span>Total marks</span>
+              <span>Total marks · 65 questions</span>
             </div>
           </div>
         </section>
       </div>
+
+      <WeightageCard />
 
       <section className="card activity-card">
         <div className="sec-head">
