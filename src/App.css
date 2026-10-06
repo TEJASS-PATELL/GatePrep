@@ -6848,50 +6848,97 @@ tbody tr:hover td {
   }
 }
 
+/* =========================================================
+   GATE WEIGHTAGE TABLE
+   Solid colors only — no gradients
+   ========================================================= */
 
-/* App.css ke end me paste karo. Solid colors only, no gradients.
-   --accent / --muted / --line tumhare theme variables hain to wahi use honge,
-   warna fallback colors chalenge. */
+.weightage-card {
+  min-width: 0;
+  overflow: hidden;
+}
 
 .weightage-card .wt-table {
   margin-top: 4px;
 }
 
+/* -------------------------
+   Top year badge
+   ------------------------- */
+
 .wt-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
   font-size: 0.78rem;
-  padding: 4px 10px;
-  border: 1px solid var(--blue);
-  color: var(--blue);
+  line-height: 1;
+
+  padding: 6px 10px;
+
+  border: 1px solid var(--blue, #4f8cff);
+  color: var(--blue, #4f8cff);
+
   border-radius: 999px;
   white-space: nowrap;
 }
 
+/* -------------------------
+   Table
+   ------------------------- */
+
 .wt-table {
   width: 100%;
   border-collapse: collapse;
+  border-spacing: 0;
+
+  table-layout: fixed;
+
   font-size: 0.9rem;
   font-variant-numeric: tabular-nums;
+
+  color: inherit;
 }
+
+/* Header */
 
 .wt-table th {
-  padding: 6px 8px;
-  font-size: 0.76rem;
-  font-weight: 500;
+  padding: 7px 8px;
+
+  font-size: 0.74rem;
+  line-height: 1.25;
+  font-weight: 600;
+
   text-align: right;
+
   color: var(--muted, #8a8f98);
-  border-bottom: 1px solid var(--line, rgba(128, 128, 128, 0.25));
+
+  border-bottom: 1px solid
+    var(--line, rgba(128, 128, 128, 0.25));
+
+  vertical-align: bottom;
 }
 
+/* Cells */
+
 .wt-table td {
-  padding: 8px;
+  padding: 9px 8px;
+
   text-align: right;
-  border-bottom: 1px solid var(--line, rgba(128, 128, 128, 0.15));
+  vertical-align: middle;
+
+  border-bottom: 1px solid
+    var(--line, rgba(128, 128, 128, 0.15));
 }
+
+/* First column */
 
 .wt-table th:first-child,
 .wt-table td:first-child {
   text-align: left;
 }
+
+/* Approx questions / average column */
 
 .wt-table th.wt-barcol,
 .wt-table td.wt-barcell {
@@ -6899,75 +6946,374 @@ tbody tr:hover td {
   text-align: left;
 }
 
+/* -------------------------
+   Average bar
+   ------------------------- */
+
 .wt-bar {
   display: flex;
   align-items: center;
   gap: 10px;
+
+  min-width: 0;
 }
 
 .wt-track {
   position: relative;
+
   flex: 1;
+  min-width: 45px;
+
   height: 8px;
+
   border-radius: 4px;
+
   background: rgba(128, 128, 128, 0.18);
+
   overflow: hidden;
 }
 
 .wt-fill {
   position: absolute;
+
   inset: 0 auto 0 0;
+
+  width: 100%;
+  height: 100%;
+
   border-radius: 4px;
-  background: var(--blue);
+
+  background: var(--blue, #4f8cff);
+
   transform-origin: left center;
-  animation: wt-grow 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+
+  animation:
+    wt-grow 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 .wt-val {
-  min-width: 2.4em;
-  font-weight: 600;
+  flex: 0 0 auto;
+
+  min-width: 2.6em;
+
+  font-size: 0.86rem;
+  line-height: 1;
+
+  font-weight: 650;
+
+  text-align: right;
 }
 
-.wt-total td {
-  font-weight: 600;
-  border-bottom: 0;
-}
+/* -------------------------
+   Min / Max year
+   ------------------------- */
 
 .wt-year {
   display: block;
-  font-size: 0.68rem;
-  line-height: 1.2;
+
+  margin-top: 2px;
+
+  font-size: 0.67rem;
+  line-height: 1.25;
+
   color: var(--muted, #8a8f98);
-  white-space: nowrap;
+
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
+
+/* -------------------------
+   Total row
+   ------------------------- */
+
+.wt-total td {
+  padding-top: 10px;
+
+  font-weight: 650;
+
+  border-bottom: 0;
+}
+
+/* -------------------------
+   Note / source text
+   ------------------------- */
 
 .wt-note {
   margin: 12px 0 0;
+
   font-size: 0.78rem;
   line-height: 1.55;
+
   color: var(--muted, #8a8f98);
+
+  overflow-wrap: anywhere;
 }
+
+.wt-note a {
+  color: var(--blue, #4f8cff);
+
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.wt-note a:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* -------------------------
+   Animation
+   ------------------------- */
 
 @keyframes wt-grow {
   from {
     transform: scaleX(0);
   }
+
   to {
     transform: scaleX(1);
   }
 }
 
-@media (max-width: 640px) {
-  .wt-table {
-    font-size: 0.84rem;
-  }
-  .wt-hide-sm {
-    display: none;
-  }
-}
+/* -------------------------
+   Reduced motion
+   ------------------------- */
 
 @media (prefers-reduced-motion: reduce) {
   .wt-fill {
     animation: none;
+  }
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .wt-table {
+    font-size: 0.86rem;
+  }
+
+  .wt-table th {
+    padding: 6px 6px;
+    font-size: 0.72rem;
+  }
+
+  .wt-table td {
+    padding: 8px 6px;
+  }
+
+  .wt-table th.wt-barcol,
+  .wt-table td.wt-barcell {
+    width: 34%;
+  }
+
+  .wt-bar {
+    gap: 8px;
+  }
+
+  .wt-track {
+    min-width: 35px;
+  }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 640px) {
+  .weightage-card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .weightage-card .sec-head {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .weightage-card .sec-head > div {
+    min-width: 0;
+  }
+
+  .weightage-card .sec-head h2 {
+    line-height: 1.2;
+  }
+
+  .wt-badge {
+    flex: 0 0 auto;
+
+    max-width: 45%;
+
+    padding: 5px 8px;
+
+    font-size: 0.67rem;
+    line-height: 1.2;
+
+    white-space: normal;
+    text-align: center;
+  }
+
+  .wt-table {
+    width: 100%;
+
+    font-size: 0.76rem;
+
+    table-layout: fixed;
+  }
+
+  /* Column proportions on small screens */
+  .wt-table th:nth-child(1),
+  .wt-table td:nth-child(1) {
+    width: 28%;
+  }
+
+  .wt-table th:nth-child(2),
+  .wt-table td:nth-child(2) {
+    width: 27%;
+  }
+
+  .wt-table th:nth-child(3),
+  .wt-table td:nth-child(3) {
+    width: 15%;
+  }
+
+  .wt-table th:nth-child(4),
+  .wt-table td:nth-child(4) {
+    width: 15%;
+  }
+
+  .wt-table th:nth-child(5),
+  .wt-table td:nth-child(5) {
+    width: 15%;
+  }
+
+  .wt-table th {
+    padding: 6px 4px;
+
+    font-size: 0.64rem;
+    line-height: 1.2;
+
+    white-space: normal;
+  }
+
+  .wt-table td {
+    padding: 8px 4px;
+
+    line-height: 1.25;
+
+    overflow-wrap: anywhere;
+  }
+
+  /* Subject names */
+  .wt-table td:first-child {
+    font-size: 0.76rem;
+    font-weight: 550;
+  }
+
+  /* Average bar */
+  .wt-table th.wt-barcol,
+  .wt-table td.wt-barcell {
+    width: 27%;
+  }
+
+  .wt-bar {
+    gap: 5px;
+  }
+
+  .wt-track {
+    min-width: 18px;
+    height: 6px;
+    border-radius: 3px;
+  }
+
+  .wt-fill {
+    border-radius: 3px;
+  }
+
+  .wt-val {
+    min-width: 2.2em;
+
+    font-size: 0.72rem;
+  }
+
+  /* Years under min/max */
+  .wt-year {
+    margin-top: 2px;
+
+    font-size: 0.56rem;
+    line-height: 1.15;
+
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* Approx question range */
+  .wt-table td:last-child {
+    font-size: 0.7rem;
+    line-height: 1.15;
+  }
+
+  /* Total */
+  .wt-total td {
+    padding-top: 9px;
+
+    font-size: 0.72rem;
+  }
+
+  /* Note */
+  .wt-note {
+    margin-top: 10px;
+
+    font-size: 0.7rem;
+    line-height: 1.5;
+  }
+}
+
+/* =========================================================
+   VERY SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 400px) {
+  .weightage-card .sec-head {
+    flex-direction: column;
+  }
+
+  .wt-badge {
+    max-width: 100%;
+    align-self: flex-start;
+  }
+
+  .wt-table {
+    font-size: 0.7rem;
+  }
+
+  .wt-table th {
+    padding: 5px 3px;
+    font-size: 0.59rem;
+  }
+
+  .wt-table td {
+    padding: 7px 3px;
+  }
+
+  .wt-table td:first-child {
+    font-size: 0.69rem;
+  }
+
+  .wt-val {
+    font-size: 0.68rem;
+  }
+
+  .wt-year {
+    font-size: 0.52rem;
+  }
+
+  .wt-table td:last-child {
+    font-size: 0.65rem;
+  }
+
+  .wt-note {
+    font-size: 0.67rem;
   }
 }
