@@ -28,6 +28,7 @@ export default function App() {
   const [now, setNow] = useState(() => Date.now());
   const [toast, setToast] = useState('');
   const pageRef = useRef(null);
+  const touchStartRef = useRef(null);
 
   const active = NAV.some(([id]) => id === page) ? page : 'dashboard';
 
@@ -67,6 +68,56 @@ export default function App() {
     setPage(id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
+
+  const handleTouchStart = (event) => {
+    if (!window.matchMedia('(max-width: 860px)').matches || event.touches.length !== 1) {
+      touchStartRef.current = null;
+      return;
+    }
+
+    const target = event.target;
+    if (
+      target.closest('input, textarea, select, button, a, [contenteditable="true"], [data-no-page-swipe]')
+    ) {
+      touchStartRef.current = null;
+      return;
+    }
+
+    let element = target;
+    while (element && element !== pageRef.current) {
+      if (element instanceof HTMLElement) {
+        const { overflowX } = window.getComputedStyle(element);
+        if (
+          (overflowX === 'auto' || overflowX === 'scroll') &&
+          element.scrollWidth > element.clientWidth
+        ) {
+          touchStartRef.current = null;
+          return;
+        }
+      }
+      element = element.parentElement;
+    }
+
+    touchStartRef.current = {
+      x: event.touches[0].clientX,
+      y: event.touches[0].clientY
+    };
+  };
+
+  const handleTouchEnd = (event) => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start || event.changedTouches.length !== 1) return;
+
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    if (Math.abs(deltaX) < 50 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
+
+    const pageIndex = NAV.findIndex(([id]) => id === active);
+    const nextPage = NAV[pageIndex + (deltaX < 0 ? 1 : -1)];
+    if (nextPage) go(nextPage[0]);
+  };
 
   /* ----- focus timer ----- */
 
@@ -623,7 +674,16 @@ export default function App() {
         </div>
       </header>
 
-      <main key={active} ref={pageRef} className="page">
+      <main
+        key={active}
+        ref={pageRef}
+        className="page"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={() => {
+          touchStartRef.current = null;
+        }}
+      >
         {pages[active]}
       </main>
 
