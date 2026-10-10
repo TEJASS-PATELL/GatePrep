@@ -112,8 +112,8 @@ const SubjectCard = memo(function SubjectCard({
   );
 });
 
-function Subjects({ state, toggleLearn, toggleWeak, bulkLearn }) {
-  const [q, setQ] = useState('');
+function Subjects({ state, toggleLearn, toggleWeak, bulkLearn, initialQuery = '' }) {
+  const [q, setQ] = useState(initialQuery);
   const [filter, setFilter] = useState('all');
   const query = q.trim().toLowerCase();
 
