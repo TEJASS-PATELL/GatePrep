@@ -7324,6 +7324,13 @@ tbody tr:hover td {
    Mobile: search bar only
    ========================================== */
 
+/* =========================================
+   GATE CSE — HEADER SEARCH
+   Desktop: Original navigation preserved
+   Mobile: Search + theme toggle
+   Scrollbars: Visible
+   ========================================= */
+
 .header-search-wrap {
   position: relative;
   z-index: 35;
@@ -7389,6 +7396,8 @@ tbody tr:hover td {
   opacity: 0.9;
 }
 
+/* Keyboard shortcut labels */
+
 .header-search-box kbd,
 .header-search-footer kbd {
   display: inline-flex;
@@ -7404,6 +7413,8 @@ tbody tr:hover td {
   font: 600 10px/1.2 var(--font-body);
   white-space: nowrap;
 }
+
+/* Clear search button */
 
 .header-search-clear {
   display: grid;
@@ -7426,7 +7437,9 @@ tbody tr:hover td {
   background: var(--paper-2);
 }
 
-/* ---------- SEARCH DROPDOWN ---------- */
+/* =========================================
+   SEARCH DROPDOWN
+   ========================================= */
 
 .header-search-dropdown {
   position: absolute;
@@ -7434,7 +7447,7 @@ tbody tr:hover td {
   right: 0;
   z-index: 70;
   width: min(440px, calc(100vw - 28px));
-  max-height: min(68vh, 540px);
+  max-height: min(60vh, 540px);
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -7446,14 +7459,51 @@ tbody tr:hover td {
   box-shadow: var(--shadow-lg);
   animation: header-search-in 0.14s ease-out both;
 
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  /* Thin and subtle scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color:
+    color-mix(in srgb, var(--mute) 20%, var(--paper-2))
+    transparent;
+}
+
+/* Chrome, Edge and Safari */
+.header-search-dropdown::-webkit-scrollbar {
+  width: 2px;
+}
+
+/* Hide scrollbar on the main website only */
+html,
+body,
+#root,
+.shell,
+.page {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#root::-webkit-scrollbar,
+.shell::-webkit-scrollbar,
+.page::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .header-search-dropdown::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
+  width: 8px;
+}
+
+.header-search-dropdown::-webkit-scrollbar-track {
+  background: var(--paper-2);
+  border-radius: 10px;
+}
+
+.header-search-dropdown::-webkit-scrollbar-thumb {
+  background: var(--mute);
+  border: 2px solid var(--paper-2);
+  border-radius: 10px;
 }
 
 @keyframes header-search-in {
@@ -7467,6 +7517,8 @@ tbody tr:hover td {
     transform: translateY(0) scale(1);
   }
 }
+
+/* Dropdown heading */
 
 .header-search-caption {
   display: flex;
@@ -7486,7 +7538,9 @@ tbody tr:hover td {
   letter-spacing: 0;
 }
 
-/* ---------- SEARCH RESULT ITEMS ---------- */
+/* =========================================
+   SEARCH RESULT ITEMS
+   ========================================= */
 
 .header-search-result {
   display: grid;
@@ -7571,7 +7625,7 @@ tbody tr:hover td {
   white-space: nowrap;
 }
 
-/* ---------- EMPTY SEARCH ---------- */
+/* Empty search state */
 
 .header-search-empty {
   display: flex;
@@ -7597,7 +7651,7 @@ tbody tr:hover td {
   font-size: 12px;
 }
 
-/* ---------- KEYBOARD HINTS ---------- */
+/* Keyboard hints */
 
 .header-search-footer {
   display: flex;
@@ -7618,7 +7672,9 @@ tbody tr:hover td {
   gap: 4px;
 }
 
-/* ---------- TABLET ---------- */
+/* =========================================
+   TABLET — DESKTOP NAVIGATION PRESERVED
+   ========================================= */
 
 @media (max-width: 1100px) and (min-width: 861px) {
   .header-search-wrap {
@@ -7633,35 +7689,29 @@ tbody tr:hover td {
   }
 }
 
-/* ==========================================
-   MOBILE — SEARCH BAR ONLY
-   Hide the navigation and theme button.
-   ========================================== */
+/* =========================================
+   MOBILE — SEARCH + THEME BUTTON
+   Hide navigation, keep theme toggle visible.
+   ========================================= */
 
 @media (max-width: 860px) {
   .topbar-in {
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
-    gap: 0;
+    gap: 10px;
     padding: 10px 16px;
   }
 
-  /* Hide the original navigation on mobile. */
   .topnav {
-    display: none !important;
-  }
-
-  /* Hide the theme button so only search remains. */
-  .topbar-in > .theme-btn {
     display: none !important;
   }
 
   .header-search-wrap {
     display: block;
-    order: 0;
-    flex: 1 1 100%;
-    width: 100%;
+    order: 1;
+    flex: 1 1 0%;
+    width: auto;
     min-width: 0;
     max-width: none;
     margin: 0;
@@ -7670,8 +7720,8 @@ tbody tr:hover td {
   .header-search-box {
     width: 100%;
     height: 44px;
-    gap: 10px;
-    padding: 0 13px;
+    gap: 9px;
+    padding: 0 12px;
     border-radius: 13px;
   }
 
@@ -7682,19 +7732,32 @@ tbody tr:hover td {
     font-size: 14px;
   }
 
-  .header-search-box kbd {
-    font-size: 10px;
+  .topbar-in > .theme-btn {
+    display: grid !important;
+    order: 2;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    place-items: center;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+
+  .topbar-in > .theme-btn:hover {
+    color: var(--blue);
+    border-color: var(--blue);
   }
 
   .header-search-dropdown {
-    position: absolute;
     top: calc(100% + 8px);
     right: 0;
     left: 0;
     width: 100%;
     max-width: none;
-    max-height: min(65dvh, 480px);
-    padding: 7px;
+    max-height: min(65vh, 480px);
     border-radius: 14px;
   }
 
@@ -7719,17 +7782,20 @@ tbody tr:hover td {
   }
 }
 
-/* ---------- SMALL MOBILE ---------- */
+/* =========================================
+   SMALL MOBILE
+   ========================================= */
 
 @media (max-width: 480px) {
   .topbar-in {
+    gap: 8px;
     padding: 9px 12px;
   }
 
   .header-search-box {
     height: 42px;
     gap: 8px;
-    padding: 0 11px;
+    padding: 0 10px;
   }
 
   .header-search-input {
@@ -7745,8 +7811,14 @@ tbody tr:hover td {
     height: 23px;
   }
 
+  .topbar-in > .theme-btn {
+    flex-basis: 40px;
+    width: 40px;
+    height: 40px;
+  }
+
   .header-search-dropdown {
-    max-height: min(62dvh, 430px);
+    max-height: min(62vh, 430px);
     border-radius: 13px;
   }
 
@@ -7791,17 +7863,20 @@ tbody tr:hover td {
   }
 }
 
-/* ---------- HIDE SCROLLBARS ---------- */
+/* =========================================
+   SCROLLBARS — VISIBLE
+   Do not use scrollbar-width: none or
+   display: none on scrollbar selectors.
+   ========================================= */
 
 html,
 body,
 #root,
 .shell,
 .page,
-.topnav,
-.header-search-dropdown {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+.topnav {
+  scrollbar-width: thin;
+  scrollbar-color: var(--mute) transparent;
 }
 
 html::-webkit-scrollbar,
@@ -7810,12 +7885,33 @@ body::-webkit-scrollbar,
 .shell::-webkit-scrollbar,
 .page::-webkit-scrollbar,
 .topnav::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
+  width: 8px;
+  height: 8px;
 }
 
-/* ---------- ACCESSIBILITY ---------- */
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+#root::-webkit-scrollbar-thumb,
+.shell::-webkit-scrollbar-thumb,
+.page::-webkit-scrollbar-thumb,
+.topnav::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border: 2px solid transparent;
+  border-radius: 99px;
+  background-clip: content-box;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+#root::-webkit-scrollbar-thumb:hover,
+.shell::-webkit-scrollbar-thumb:hover,
+.page::-webkit-scrollbar-thumb:hover,
+.topnav::-webkit-scrollbar-thumb:hover {
+  background: var(--mute);
+  background-clip: content-box;
+}
+
+/* Accessibility */
 
 @media (prefers-reduced-motion: reduce) {
   .header-search-dropdown {
@@ -7825,70 +7921,5 @@ body::-webkit-scrollbar,
   .header-search-box,
   .header-search-result {
     transition: none;
-  }
-}
-
-/* Mobile header: Search + Theme toggle */
-
-@media (max-width: 860px) {
-  .topbar-in {
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .topnav {
-    display: none !important;
-  }
-
-  .header-search-wrap {
-    order: 1;
-    flex: 1 1 0%;
-    width: auto;
-    min-width: 0;
-    margin: 0;
-  }
-
-  .topbar-in > .theme-btn {
-    display: grid !important;
-    order: 2;
-    flex: 0 0 42px;
-    width: 42px;
-    height: 42px;
-    padding: 0;
-    place-items: center;
-    border: none;
-    border-radius: 12px;
-    background: var(--paper);
-    color: var(--ink);
-  }
-
-  .topbar-in > .theme-btn:hover {
-    color: var(--blue);
-    border-color: var(--blue);
-  }
-
-  .header-search-dropdown {
-    left: 0;
-    right: auto;
-    width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .topbar-in {
-    gap: 8px;
-    padding: 9px 12px;
-  }
-
-  .topbar-in > .theme-btn {
-    flex-basis: 40px;
-    width: 40px;
-    height: 40px;
-  }
-
-  .header-search-box {
-    height: 42px;
   }
 }
