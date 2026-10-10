@@ -7635,3 +7635,33 @@ tbody tr:hover td {
     animation: none;
   }
 }
+
+/* Hide scrollbars without disabling scrolling */
+html,
+body,
+#root,
+.shell,
+.page,
+.topnav,
+.header-search-dropdown {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#root::-webkit-scrollbar,
+.shell::-webkit-scrollbar,
+.page::-webkit-scrollbar,
+.topnav::-webkit-scrollbar,
+.header-search-dropdown::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Keep search results scrollable */
+.header-search-dropdown {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}

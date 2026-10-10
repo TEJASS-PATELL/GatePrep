@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './App.css';
+
 import Dashboard from './Pages/Dashboard.jsx';
 import Subjects from './Pages/Subjects.jsx';
 import PYQs from './Pages/PYQs.jsx';
@@ -10,11 +11,42 @@ import Focus from './Pages/Focus.jsx';
 import Tests from './Pages/Tests.jsx';
 import Mistakes from './Pages/Mistakes.jsx';
 import Settings from './Pages/Settings.jsx';
-import { Icon, KEY, NAV, NAMES, SUBJECTS, REVIEW_INTERVALS, REV_ROUNDS, blank, clock, dateAfter, generatePlan, load, regenerateIfNeeded, today, track, uid, units, usePageIn, ymd } from './Pages/shared.jsx';
+
+import {
+  Icon,
+  KEY,
+  NAV,
+  NAMES,
+  SUBJECTS,
+  REVIEW_INTERVALS,
+  REV_ROUNDS,
+  blank,
+  clock,
+  dateAfter,
+  generatePlan,
+  load,
+  regenerateIfNeeded,
+  today,
+  track,
+  uid,
+  units,
+  usePageIn,
+  ymd
+} from './Pages/shared.jsx';
 
 function SearchIcon({ size = 17 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <circle cx="10.8" cy="10.8" r="6.8" />
       <path d="m16 16 4.5 4.5" />
     </svg>
@@ -23,6 +55,7 @@ function SearchIcon({ size = 17 }) {
 
 export default function App() {
   const [state, setState] = useState(load);
+
   const [page, setPage] = useState(
     () => window.location.hash.slice(1) || 'dashboard'
   );
@@ -36,45 +69,61 @@ export default function App() {
 
   const [now, setNow] = useState(() => Date.now());
   const [toast, setToast] = useState('');
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [selectedSearchResult, setSelectedSearchResult] = useState(0);
   const [subjectJump, setSubjectJump] = useState('');
+
   const searchInputRef = useRef(null);
   const searchWrapRef = useRef(null);
   const pageRef = useRef(null);
   const touchStartRef = useRef(null);
 
-  const active = NAV.some(([id]) => id === page) ? page : 'dashboard';
+  const active = NAV.some(([id]) => id === page)
+    ? page
+    : 'dashboard';
 
   usePageIn(pageRef, active);
 
+  // Persist existing study progress.
   useEffect(() => {
     try {
       localStorage.setItem(KEY, JSON.stringify(state));
     } catch {
-      /* storage full or blocked */
+      // Storage may be full or unavailable.
     }
   }, [state]);
 
+  // Apply the existing light/dark theme.
   useEffect(() => {
-    document.documentElement.dataset.theme = state.dark ? 'dark' : 'light';
+    document.documentElement.dataset.theme = state.dark
+      ? 'dark'
+      : 'light';
   }, [state.dark]);
 
+  // Regenerate daily study tasks when required.
   useEffect(() => {
     regenerateIfNeeded(setState);
   }, []);
 
+  // Handle browser hash navigation.
   useEffect(() => {
-    const onHash = () =>
-      setPage(window.location.hash.slice(1) || 'dashboard');
+    const onHash = () => {
+      const nextPage = window.location.hash.slice(1) || 'dashboard';
 
-    const id = setInterval(() => regenerateIfNeeded(setState), 60000);
+      setPage(nextPage);
+    };
+
+    const intervalId = setInterval(() => {
+      regenerateIfNeeded(setState);
+    }, 60000);
 
     window.addEventListener('hashchange', onHash);
+
     return () => {
       window.removeEventListener('hashchange', onHash);
-      clearInterval(id);
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -84,101 +133,191 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  // Search pages, subjects and individual syllabus topics.
   const searchResults = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
+
     const pageIcons = {
-      dashboard: 'chart', subjects: 'book', pyqs: 'check', revision: 'rotate',
-      priority: 'flag', plan: 'star', focus: 'timer', tests: 'chart',
-      mistakes: 'alert', settings: 'note'
+      dashboard: 'chart',
+      subjects: 'book',
+      pyqs: 'check',
+      revision: 'rotate',
+      priority: 'flag',
+      plan: 'star',
+      focus: 'timer',
+      tests: 'chart',
+      mistakes: 'alert',
+      settings: 'note'
     };
+
+    const pageDescriptions = {
+      dashboard: 'Progress overview and next steps',
+      subjects: 'Syllabus topics, learning progress and weak areas',
+      pyqs: 'Previous-year question tracking',
+      revision: 'Topics scheduled for revision',
+      priority: 'High-impact subjects and priorities',
+      plan: 'Today’s study tasks',
+      focus: 'Pomodoro timer and focus sessions',
+      tests: 'Mock-test scores and performance',
+      mistakes: 'Mistake notebook and patterns',
+      settings: 'Targets, backups and preferences'
+    };
+
     const pageItems = NAV.map(([id, label], order) => ({
       id: `page-${id}`,
       kind: 'Page',
       label,
-      description: ({
-        dashboard: 'Progress overview and next steps',
-        subjects: 'Syllabus topics, learning progress and weak areas',
-        pyqs: 'Previous-year question tracking',
-        revision: 'Topics scheduled for revision',
-        priority: 'High-impact subjects and priorities',
-        plan: 'Today’s study tasks',
-        focus: 'Pomodoro timer and focus sessions',
-        tests: 'Mock-test scores and performance',
-        mistakes: 'Mistake notebook and patterns',
-        settings: 'Targets, backups and preferences'
-      })[id],
-      icon: pageIcons[id],
-      action: { type: 'page', page: id },
+      description: pageDescriptions[id] || `Open ${label}`,
+      icon: pageIcons[id] || 'note',
+      action: {
+        type: 'page',
+        page: id
+      },
       haystack: `${label} ${id}`,
       order
     }));
+
     const subjectItems = NAMES.map((name, order) => {
-      const done = (state.subjects[name]?.learn || []).filter(Boolean).length;
+      const done = (
+        state.subjects[name]?.learn || []
+      ).filter(Boolean).length;
+
       const total = SUBJECTS[name].topics.length;
+
       return {
-        id: `subject-${name}`, kind: 'Subject', label: name,
+        id: `subject-${name}`,
+        kind: 'Subject',
+        label: name,
         description: `${done}/${total} topics learned · open in Subjects`,
-        icon: 'book', action: { type: 'subject', query: name },
-        haystack: `${name} ${SUBJECTS[name].short}`, order
+        icon: 'book',
+        action: {
+          type: 'subject',
+          query: name
+        },
+        haystack: `${name} ${SUBJECTS[name].short}`,
+        order
       };
     });
-    const topicItems = NAMES.flatMap((name) => SUBJECTS[name].topics.map((topic, order) => ({
-      id: `topic-${name}-${order}`, kind: 'Topic', label: topic,
-      description: name, icon: 'note',
-      action: { type: 'topic', query: topic },
-      haystack: `${topic} ${name}`, order
-    })));
 
-    if (!query) return [pageItems[0], pageItems[1], pageItems[2], pageItems[3], pageItems[6]];
+    const topicItems = NAMES.flatMap((name) =>
+      SUBJECTS[name].topics.map((topic, order) => ({
+        id: `topic-${name}-${order}`,
+        kind: 'Topic',
+        label: topic,
+        description: name,
+        icon: 'note',
+        action: {
+          type: 'topic',
+          query: topic
+        },
+        haystack: `${topic} ${name}`,
+        order
+      }))
+    );
 
-    const kindRank = { Page: 0, Subject: 1, Topic: 2 };
+    // Show ALL 10 pages when search is empty.
+    if (!query) {
+      return pageItems;
+    }
+
+    const kindRank = {
+      Page: 0,
+      Subject: 1,
+      Topic: 2
+    };
+
     return [...pageItems, ...subjectItems, ...topicItems]
-      .filter((item) => `${item.label} ${item.description} ${item.haystack}`.toLowerCase().includes(query))
+      .filter((item) =>
+        `${item.label} ${item.description} ${item.haystack}`
+          .toLowerCase()
+          .includes(query)
+      )
       .sort((a, b) => {
         const aLabel = a.label.toLowerCase();
         const bLabel = b.label.toLowerCase();
+
         const aExact = aLabel === query ? 0 : 1;
         const bExact = bLabel === query ? 0 : 1;
-        if (aExact !== bExact) return aExact - bExact;
+
+        if (aExact !== bExact) {
+          return aExact - bExact;
+        }
+
         const aStarts = aLabel.startsWith(query) ? 0 : 1;
         const bStarts = bLabel.startsWith(query) ? 0 : 1;
-        if (aStarts !== bStarts) return aStarts - bStarts;
-        return kindRank[a.kind] - kindRank[b.kind] || a.order - b.order;
+
+        if (aStarts !== bStarts) {
+          return aStarts - bStarts;
+        }
+
+        return (
+          kindRank[a.kind] - kindRank[b.kind] ||
+          a.order - b.order
+        );
       })
-      .slice(0, 9);
+      .slice(0, 12);
   }, [searchQuery, state.subjects]);
 
-  const chooseSearchResult = useCallback((item) => {
-    setSearchOpen(false);
-    setSearchQuery('');
-    setSelectedSearchResult(0);
-    if (item.action.type === 'page') {
-      setSubjectJump('');
-      go(item.action.page);
-      return;
-    }
-    setSubjectJump(item.action.query);
-    go('subjects');
-  }, [go]);
+  // Navigate to the selected search result.
+  const chooseSearchResult = useCallback(
+    (item) => {
+      setSearchOpen(false);
+      setSearchQuery('');
+      setSelectedSearchResult(0);
 
+      if (item.action.type === 'page') {
+        setSubjectJump('');
+        go(item.action.page);
+        return;
+      }
+
+      setSubjectJump(item.action.query);
+      go('subjects');
+    },
+    [go]
+  );
+
+  // Close the suggestions when clicking outside the search area.
   useEffect(() => {
     const onPointerDown = (event) => {
-      if (!searchWrapRef.current?.contains(event.target)) setSearchOpen(false);
+      if (!searchWrapRef.current?.contains(event.target)) {
+        setSearchOpen(false);
+      }
     };
+
     document.addEventListener('pointerdown', onPointerDown);
-    return () => document.removeEventListener('pointerdown', onPointerDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+    };
   }, []);
 
+  // Search shortcuts: Ctrl/Cmd + K, / and Escape.
   useEffect(() => {
     const onShortcut = (event) => {
-      const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName) || event.target.isContentEditable;
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+      const target = event.target;
+
+      const typing =
+        /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) ||
+        target.isContentEditable;
+
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        event.key.toLowerCase() === 'k'
+      ) {
         event.preventDefault();
         setSearchOpen(true);
         searchInputRef.current?.focus();
         return;
       }
-      if (!typing && !event.ctrlKey && !event.metaKey && !event.altKey && event.key === '/') {
+
+      if (
+        !typing &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey &&
+        event.key === '/'
+      ) {
         event.preventDefault();
         setSearchOpen(true);
         searchInputRef.current?.focus();
@@ -186,28 +325,41 @@ export default function App() {
         setSearchOpen(false);
       }
     };
+
     window.addEventListener('keydown', onShortcut);
-    return () => window.removeEventListener('keydown', onShortcut);
+
+    return () => {
+      window.removeEventListener('keydown', onShortcut);
+    };
   }, []);
 
+  // Touch swipe navigation for smaller screens.
   const handleTouchStart = (event) => {
-    if (!window.matchMedia('(max-width: 860px)').matches || event.touches.length !== 1) {
+    if (
+      !window.matchMedia('(max-width: 860px)').matches ||
+      event.touches.length !== 1
+    ) {
       touchStartRef.current = null;
       return;
     }
 
     const target = event.target;
+
     if (
-      target.closest('input, textarea, select, button, a, [contenteditable="true"], [data-no-page-swipe]')
+      target.closest(
+        'input, textarea, select, button, a, [contenteditable="true"], [data-no-page-swipe]'
+      )
     ) {
       touchStartRef.current = null;
       return;
     }
 
     let element = target;
+
     while (element && element !== pageRef.current) {
       if (element instanceof HTMLElement) {
         const { overflowX } = window.getComputedStyle(element);
+
         if (
           (overflowX === 'auto' || overflowX === 'scroll') &&
           element.scrollWidth > element.clientWidth
@@ -216,6 +368,7 @@ export default function App() {
           return;
         }
       }
+
       element = element.parentElement;
     }
 
@@ -228,19 +381,31 @@ export default function App() {
   const handleTouchEnd = (event) => {
     const start = touchStartRef.current;
     touchStartRef.current = null;
-    if (!start || event.changedTouches.length !== 1) return;
+
+    if (!start || event.changedTouches.length !== 1) {
+      return;
+    }
 
     const touch = event.changedTouches[0];
     const deltaX = touch.clientX - start.x;
     const deltaY = touch.clientY - start.y;
-    if (Math.abs(deltaX) < 50 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
+
+    if (
+      Math.abs(deltaX) < 50 ||
+      Math.abs(deltaX) < Math.abs(deltaY) * 1.2
+    ) {
+      return;
+    }
 
     const pageIndex = NAV.findIndex(([id]) => id === active);
     const nextPage = NAV[pageIndex + (deltaX < 0 ? 1 : -1)];
-    if (nextPage) go(nextPage[0]);
+
+    if (nextPage) {
+      go(nextPage[0]);
+    }
   };
 
-  /* ----- focus timer ----- */
+  // ---------------- Focus timer ----------------
 
   const running = timer.endAt > 0;
   const idle = !running && !timer.paused;
@@ -251,41 +416,49 @@ export default function App() {
 
   const addFocus = useCallback((min, subject) => {
     setState((s) => {
-      if (min < 1) return s;
+      if (min < 1) {
+        return s;
+      }
 
-      const t = today();
+      const date = today();
 
       return {
         ...s,
         focus: {
           ...s.focus,
-          [t]: (s.focus[t] || 0) + min
+          [date]: (s.focus[date] || 0) + min
         },
         focusBy: subject
           ? {
-            ...s.focusBy,
-            [subject]: (s.focusBy[subject] || 0) + min
-          }
+              ...s.focusBy,
+              [subject]: (s.focusBy[subject] || 0) + min
+            }
           : s.focusBy
       };
     });
   }, []);
 
   useEffect(() => {
-    if (!running) return undefined;
+    if (!running) {
+      return undefined;
+    }
 
     let completed = false;
-    const id = setInterval(() => {
+
+    const intervalId = setInterval(() => {
       const currentTime = Date.now();
       setNow(currentTime);
 
-      if (completed || currentTime < timer.endAt) return;
+      if (completed || currentTime < timer.endAt) {
+        return;
+      }
+
       completed = true;
 
       addFocus(timer.mins, timer.subject);
 
-      setTimer((t) => ({
-        ...t,
+      setTimer((current) => ({
+        ...current,
         endAt: 0,
         paused: 0
       }));
@@ -294,8 +467,14 @@ export default function App() {
       navigator.vibrate?.(300);
     }, 250);
 
-    return () => clearInterval(id);
-  }, [running, timer.endAt, timer.mins, timer.subject, addFocus]);
+    return () => clearInterval(intervalId);
+  }, [
+    running,
+    timer.endAt,
+    timer.mins,
+    timer.subject,
+    addFocus
+  ]);
 
   useEffect(() => {
     document.title = running
@@ -304,157 +483,203 @@ export default function App() {
   }, [running, secsLeft]);
 
   useEffect(() => {
-    if (!toast) return undefined;
+    if (!toast) {
+      return undefined;
+    }
 
-    const id = setTimeout(() => setToast(''), 4000);
-    return () => clearTimeout(id);
+    const timeoutId = setTimeout(() => setToast(''), 4000);
+
+    return () => clearTimeout(timeoutId);
   }, [toast]);
 
   const start = () => {
-    const n = Date.now();
-    setNow(n);
+    const startedAt = Date.now();
+    setNow(startedAt);
 
-    setTimer((t) => ({
-      ...t,
-      endAt: n + (t.paused || t.mins * 60) * 1000,
+    setTimer((current) => ({
+      ...current,
+      endAt:
+        startedAt +
+        (current.paused || current.mins * 60) * 1000,
       paused: 0
     }));
   };
 
-  const beginSprint = useCallback((subject) => {
-    if (!idle) {
+  const beginSprint = useCallback(
+    (subject) => {
+      if (!idle) {
+        go('focus');
+        return;
+      }
+
+      const startedAt = Date.now();
+      setNow(startedAt);
+
+      setTimer((current) => ({
+        ...current,
+        mins: 25,
+        subject,
+        endAt: startedAt + 25 * 60 * 1000,
+        paused: 0
+      }));
+
       go('focus');
-      return;
-    }
+    },
+    [go, idle]
+  );
 
-    const startedAt = Date.now();
-    setNow(startedAt);
-    setTimer((current) => ({
-      ...current,
-      mins: 25,
-      subject,
-      endAt: startedAt + 25 * 60 * 1000,
-      paused: 0
-    }));
-    go('focus');
-  }, [go, idle]);
+  const pause = useCallback(
+    () =>
+      setTimer((current) => ({
+        ...current,
+        endAt: 0,
+        paused: Math.max(
+          1,
+          Math.ceil((current.endAt - Date.now()) / 1000)
+        )
+      })),
+    []
+  );
 
-  const pause = useCallback(() =>
-    setTimer((t) => ({
-      ...t,
-      endAt: 0,
-      paused: Math.max(1, Math.ceil((t.endAt - Date.now()) / 1000))
-    })), []);
-
+  // Number-key navigation and theme shortcut.
   useEffect(() => {
-    const onKey = (e) => {
+    const onKey = (event) => {
       if (
-        e.ctrlKey ||
-        e.metaKey ||
-        e.altKey ||
-        /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey ||
+        /^(INPUT|SELECT|TEXTAREA)$/.test(event.target.tagName) ||
+        event.target.isContentEditable
       ) {
         return;
       }
 
-      const n = Number(e.key);
+      const number = Number(event.key);
 
-      if (n >= 1 && n <= NAV.length) {
-        go(NAV[n - 1][0]);
-      } else if (e.key === 't') {
-        setState((s) => ({
-          ...s,
-          dark: !s.dark
+      if (number >= 1 && number <= NAV.length) {
+        go(NAV[number - 1][0]);
+      } else if (event.key.toLowerCase() === 't') {
+        setState((current) => ({
+          ...current,
+          dark: !current.dark
         }));
-      } else if (e.key === 'Escape' && running) {
+      } else if (event.key === 'Escape' && running) {
         pause();
       }
     };
 
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+
+    return () => {
+      window.removeEventListener('keydown', onKey);
+    };
   }, [go, pause, running]);
 
   const stop = () => {
-    const mins = Math.floor((timer.mins * 60 - secsLeft) / 60);
+    const mins = Math.floor(
+      (timer.mins * 60 - secsLeft) / 60
+    );
 
     if (mins >= 1) {
       addFocus(mins, timer.subject);
       setToast(`${mins} min logged`);
     }
 
-    setTimer((t) => ({
-      ...t,
+    setTimer((current) => ({
+      ...current,
       endAt: 0,
       paused: 0
     }));
   };
 
-  const setMins = (m) => {
+  const setMins = (mins) => {
     if (idle) {
-      setTimer((t) => ({ ...t, mins: m }));
+      setTimer((current) => ({
+        ...current,
+        mins
+      }));
     }
   };
 
-  const setSubject = (s) =>
-    setTimer((t) => ({ ...t, subject: s }));
+  const setSubject = (subject) => {
+    setTimer((current) => ({
+      ...current,
+      subject
+    }));
+  };
 
-  /* ----- tracker actions ----- */
+  // ---------------- Tracker actions ----------------
 
-  const edit = useCallback((name, up) => {
-    setState((s) => {
-      const nd = up(s.subjects[name]);
+  const edit = useCallback((name, update) => {
+    setState((current) => {
+      const nextData = update(current.subjects[name]);
+
       return track(
         {
-          ...s,
+          ...current,
           subjects: {
-            ...s.subjects,
-            [name]: nd
+            ...current.subjects,
+            [name]: nextData
           }
         },
-        units(nd) - units(s.subjects[name])
+        units(nextData) - units(current.subjects[name])
       );
     });
   }, []);
 
   const flip = useCallback(
-    (k) => (name, i) =>
-      edit(name, (d) => ({
-        ...d,
-        [k]: d[k].map((v, x) => (x === i ? !v : v))
+    (key) => (name, index) =>
+      edit(name, (data) => ({
+        ...data,
+        [key]: data[key].map((value, i) =>
+          i === index ? !value : value
+        )
       })),
     [edit]
   );
 
   const toggleLearn = useCallback(
-    (name, i) =>
-      edit(name, (d) => {
-        const learned = !d.learn[i];
+    (name, index) =>
+      edit(name, (data) => {
+        const learned = !data.learn[index];
+
         return {
-          ...d,
-          learn: d.learn.map((value, index) => index === i ? learned : value),
-          reviewSchedule: d.reviewSchedule.map((schedule, index) =>
-            index === i
-              ? learned
-                ? { due: dateAfter(today(), REVIEW_INTERVALS[0]), interval: 0, lastReviewed: '' }
-                : null
-              : schedule
+          ...data,
+          learn: data.learn.map((value, i) =>
+            i === index ? learned : value
+          ),
+          reviewSchedule: data.reviewSchedule.map(
+            (schedule, i) =>
+              i === index
+                ? learned
+                  ? {
+                      due: dateAfter(today(), REVIEW_INTERVALS[0]),
+                      interval: 0,
+                      lastReviewed: ''
+                    }
+                  : null
+                : schedule
           )
         };
       }),
     [edit]
   );
+
   const togglePYQ = useMemo(() => flip('pyq'), [flip]);
   const toggleWeak = useMemo(() => flip('weak'), [flip]);
 
   const bulkLearn = useCallback(
-    (n, v) =>
-      edit(n, (d) => ({
-        ...d,
-        learn: d.learn.map(() => v),
-        reviewSchedule: d.reviewSchedule.map((schedule) =>
-          v
-            ? schedule || { due: dateAfter(today(), REVIEW_INTERVALS[0]), interval: 0, lastReviewed: '' }
+    (name, value) =>
+      edit(name, (data) => ({
+        ...data,
+        learn: data.learn.map(() => value),
+        reviewSchedule: data.reviewSchedule.map((schedule) =>
+          value
+            ? schedule || {
+                due: dateAfter(today(), REVIEW_INTERVALS[0]),
+                interval: 0,
+                lastReviewed: ''
+              }
             : null
         )
       })),
@@ -462,79 +687,97 @@ export default function App() {
   );
 
   const bulkPYQ = useCallback(
-    (n, v) =>
-      edit(n, (d) => ({
-        ...d,
-        pyq: d.pyq.map(() => v)
+    (name, value) =>
+      edit(name, (data) => ({
+        ...data,
+        pyq: data.pyq.map(() => value)
       })),
     [edit]
   );
 
   const completeReview = useCallback(
     (name, index) =>
-      setState((s) => {
-        const d = s.subjects[name];
-        const schedule = d.reviewSchedule[index];
-        if (!d.learn[index] || schedule?.lastReviewed === today()) return s;
+      setState((current) => {
+        const data = current.subjects[name];
+        const schedule = data.reviewSchedule[index];
+
+        if (
+          !data.learn[index] ||
+          schedule?.lastReviewed === today()
+        ) {
+          return current;
+        }
 
         const interval = Math.min(
           (schedule?.interval || 0) + 1,
           REVIEW_INTERVALS.length - 1
         );
-        const nd = {
-          ...d,
-          rev: d.rev.map((value, i) => i === index ? REV_ROUNDS : value),
-          reviewSchedule: d.reviewSchedule.map((value, i) =>
-            i === index
-              ? {
-                due: dateAfter(today(), REVIEW_INTERVALS[interval]),
-                interval,
-                lastReviewed: today()
-              }
-              : value
+
+        const nextData = {
+          ...data,
+          rev: data.rev.map((value, i) =>
+            i === index ? REV_ROUNDS : value
+          ),
+          reviewSchedule: data.reviewSchedule.map(
+            (value, i) =>
+              i === index
+                ? {
+                    due: dateAfter(today(), REVIEW_INTERVALS[interval]),
+                    interval,
+                    lastReviewed: today()
+                  }
+                : value
           )
         };
 
         return track(
-          { ...s, subjects: { ...s.subjects, [name]: nd } },
-          units(nd) - units(d)
+          {
+            ...current,
+            subjects: {
+              ...current.subjects,
+              [name]: nextData
+            }
+          },
+          units(nextData) - units(data)
         );
       }),
     []
   );
 
   const bulkRev = useCallback(
-    (n, v) =>
-      edit(n, (d) => ({
-        ...d,
-        rev: d.rev.map(() => (v ? REV_ROUNDS : 0))
+    (name, value) =>
+      edit(name, (data) => ({
+        ...data,
+        rev: data.rev.map(() =>
+          value ? REV_ROUNDS : 0
+        )
       })),
     [edit]
   );
 
   const addTask = useCallback(
-    (name, i, kind, label) =>
-      setState((s) => {
-        if (
-          s.tasks.some(
-            (t) =>
-              t.name === name &&
-              t.i === i &&
-              t.kind === kind &&
-              !t.done
-          )
-        ) {
-          return s;
+    (name, index, kind, label) =>
+      setState((current) => {
+        const alreadyExists = current.tasks.some(
+          (task) =>
+            task.name === name &&
+            task.i === index &&
+            task.kind === kind &&
+            !task.done
+        );
+
+        if (alreadyExists) {
+          return current;
         }
 
         return {
-          ...s,
+          ...current,
           tasks: [
-            ...s.tasks,
+            ...current.tasks,
             {
               id: uid(),
               name,
-              i,
+              i: index,
               kind,
               label,
               done: false
@@ -547,39 +790,55 @@ export default function App() {
 
   const toggleTask = useCallback(
     (id) =>
-      setState((s) => {
-        const task = s.tasks.find((t) => t.id === id);
-        if (!task) return s;
+      setState((current) => {
+        const task = current.tasks.find(
+          (item) => item.id === id
+        );
+
+        if (!task) {
+          return current;
+        }
 
         const doneNow = !task.done;
-        const d = s.subjects[task.name];
-        const nd = { ...d };
+        const data = current.subjects[task.name];
+        const nextData = { ...data };
 
         if (task.kind === 'learn') {
-          nd.learn = d.learn.map((v, x) => (x === task.i ? doneNow : v));
-        }
-
-        if (task.kind === 'pyq') {
-          nd.pyq = d.pyq.map((v, x) => (x === task.i ? doneNow : v));
-        }
-
-        if (task.kind === 'rev1') {
-          nd.rev = d.rev.map((v, x) =>
-            x === task.i ? (doneNow ? REV_ROUNDS : 0) : v
+          nextData.learn = data.learn.map((value, i) =>
+            i === task.i ? doneNow : value
           );
         }
 
-        const delta = units(nd) - units(d);
+        if (task.kind === 'pyq') {
+          nextData.pyq = data.pyq.map((value, i) =>
+            i === task.i ? doneNow : value
+          );
+        }
+
+        if (task.kind === 'rev1') {
+          nextData.rev = data.rev.map((value, i) =>
+            i === task.i
+              ? doneNow
+                ? REV_ROUNDS
+                : 0
+              : value
+          );
+        }
+
+        const delta =
+          units(nextData) - units(data);
 
         return track(
           {
-            ...s,
-            tasks: s.tasks.map((t) =>
-              t.id === id ? { ...t, done: doneNow } : t
+            ...current,
+            tasks: current.tasks.map((item) =>
+              item.id === id
+                ? { ...item, done: doneNow }
+                : item
             ),
             subjects: {
-              ...s.subjects,
-              [task.name]: nd
+              ...current.subjects,
+              [task.name]: nextData
             }
           },
           delta
@@ -590,21 +849,21 @@ export default function App() {
 
   const regeneratePlan = useCallback(
     () =>
-      setState((s) => ({
-        ...s,
+      setState((current) => ({
+        ...current,
         planDate: today(),
-        tasks: generatePlan(s)
+        tasks: generatePlan(current)
       })),
     []
   );
 
   const addMock = useCallback(
     (mock) =>
-      setState((s) =>
+      setState((current) =>
         track(
           {
-            ...s,
-            mocks: [...s.mocks, mock]
+            ...current,
+            mocks: [...current.mocks, mock]
           },
           1
         )
@@ -614,62 +873,74 @@ export default function App() {
 
   const deleteMock = useCallback(
     (id) =>
-      setState((s) => ({
-        ...s,
-        mocks: s.mocks.filter((x) => x.id !== id)
+      setState((current) => ({
+        ...current,
+        mocks: current.mocks.filter(
+          (mock) => mock.id !== id
+        )
       })),
     []
   );
 
-  /* Feature 1 action: Save short note */
   const saveNote = useCallback((key, text) => {
-    setState((s) => ({
-      ...s,
+    setState((current) => ({
+      ...current,
       notes: {
-        ...s.notes,
+        ...current.notes,
         [key]: text
       }
     }));
   }, []);
 
-  /* Feature 2 action: Mistake notebook */
   const addMistake = useCallback((mistake) => {
-    setState((s) => ({
-      ...s,
-      mistakes: [...(s.mistakes || []), mistake]
+    setState((current) => ({
+      ...current,
+      mistakes: [
+        ...(current.mistakes || []),
+        mistake
+      ]
     }));
   }, []);
 
   const deleteMistake = useCallback((id) => {
-    setState((s) => ({
-      ...s,
-      mistakes: (s.mistakes || []).filter((m) => m.id !== id)
+    setState((current) => ({
+      ...current,
+      mistakes: (current.mistakes || []).filter(
+        (mistake) => mistake.id !== id
+      )
     }));
   }, []);
 
   const reset = useCallback(() => {
     if (window.confirm('Reset every GATE tracker item?')) {
-      setState((s) => ({
+      setState((current) => ({
         ...blank(),
-        dark: s.dark,
-        name: s.name
+        dark: current.dark,
+        name: current.name
       }));
     }
   }, []);
 
   const setName = useCallback(
-    (name) => setState((s) => ({ ...s, name })),
+    (name) =>
+      setState((current) => ({
+        ...current,
+        name
+      })),
     []
   );
 
-  const t = today();
-  const y = new Date();
-  y.setDate(y.getDate() - 1);
+  const currentDate = today();
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
 
   const streak =
-    state.lastActive === t || state.lastActive === ymd(y)
+    state.lastActive === currentDate ||
+    state.lastActive === ymd(yesterday)
       ? state.streak
       : 0;
+
+  // ---------------- Existing pages ----------------
 
   const pages = {
     dashboard: (
@@ -683,6 +954,7 @@ export default function App() {
         focusBusy={!idle}
       />
     ),
+
     subjects: (
       <Subjects
         key={subjectJump}
@@ -694,6 +966,7 @@ export default function App() {
         saveNote={saveNote}
       />
     ),
+
     pyqs: (
       <PYQs
         state={state}
@@ -701,6 +974,7 @@ export default function App() {
         bulkPYQ={bulkPYQ}
       />
     ),
+
     revision: (
       <Revision
         state={state}
@@ -708,12 +982,14 @@ export default function App() {
         bulkRev={bulkRev}
       />
     ),
+
     priority: (
       <Priority
         state={state}
         addTask={addTask}
       />
     ),
+
     plan: (
       <Plan
         state={state}
@@ -721,6 +997,7 @@ export default function App() {
         regenerate={regeneratePlan}
       />
     ),
+
     focus: (
       <Focus
         state={state}
@@ -734,6 +1011,7 @@ export default function App() {
         stop={stop}
       />
     ),
+
     tests: (
       <Tests
         state={state}
@@ -741,6 +1019,7 @@ export default function App() {
         deleteMock={deleteMock}
       />
     ),
+
     mistakes: (
       <Mistakes
         state={state}
@@ -748,6 +1027,7 @@ export default function App() {
         deleteMistake={deleteMistake}
       />
     ),
+
     settings: (
       <Settings
         state={state}
@@ -761,15 +1041,28 @@ export default function App() {
     <div className="shell">
       <header className="topbar">
         <div className="topbar-in">
-          <nav className="topnav" aria-label="Main navigation">
+          {/* Original top navigation remains unchanged. */}
+          <nav
+            className="topnav"
+            aria-label="Main navigation"
+          >
             {NAV.map(([id, label]) => (
               <button
                 key={id}
-                className={`nav-item ${active === id ? 'active' : ''}`}
-                aria-current={active === id ? 'page' : undefined}
+                type="button"
+                className={`nav-item ${
+                  active === id ? 'active' : ''
+                }`}
+                aria-current={
+                  active === id ? 'page' : undefined
+                }
                 onClick={() => {
                   setSearchOpen(false);
-                  if (id === 'subjects') setSubjectJump('');
+
+                  if (id === 'subjects') {
+                    setSubjectJump('');
+                  }
+
                   go(id);
                 }}
               >
@@ -778,9 +1071,16 @@ export default function App() {
             ))}
           </nav>
 
-          <div className={`header-search-wrap ${searchOpen ? 'is-open' : ''}`} ref={searchWrapRef}>
+          {/* Direct search in the existing header. */}
+          <div
+            className={`header-search-wrap ${
+              searchOpen ? 'is-open' : ''
+            }`}
+            ref={searchWrapRef}
+          >
             <div className="header-search-box">
               <SearchIcon size={17} />
+
               <input
                 ref={searchInputRef}
                 className="header-search-input"
@@ -795,13 +1095,31 @@ export default function App() {
                 onKeyDown={(event) => {
                   if (event.key === 'ArrowDown') {
                     event.preventDefault();
-                    setSelectedSearchResult((index) => Math.min(searchResults.length - 1, index + 1));
+
+                    setSelectedSearchResult((index) =>
+                      Math.max(
+                        0,
+                        Math.min(
+                          searchResults.length - 1,
+                          index + 1
+                        )
+                      )
+                    );
                   } else if (event.key === 'ArrowUp') {
                     event.preventDefault();
-                    setSelectedSearchResult((index) => Math.max(0, index - 1));
-                  } else if (event.key === 'Enter' && searchResults[selectedSearchResult]) {
+
+                    setSelectedSearchResult((index) =>
+                      Math.max(0, index - 1)
+                    );
+                  } else if (
+                    event.key === 'Enter' &&
+                    searchResults[selectedSearchResult]
+                  ) {
                     event.preventDefault();
-                    chooseSearchResult(searchResults[selectedSearchResult]);
+
+                    chooseSearchResult(
+                      searchResults[selectedSearchResult]
+                    );
                   } else if (event.key === 'Escape') {
                     event.preventDefault();
                     setSearchOpen(false);
@@ -813,11 +1131,15 @@ export default function App() {
                 aria-controls="header-search-results"
                 autoComplete="off"
               />
+
               {searchQuery ? (
                 <button
                   className="header-search-clear"
                   type="button"
                   aria-label="Clear search"
+                  onMouseDown={(event) =>
+                    event.preventDefault()
+                  }
                   onClick={() => {
                     setSearchQuery('');
                     setSelectedSearchResult(0);
@@ -827,53 +1149,123 @@ export default function App() {
                 >
                   ×
                 </button>
-              ) : <kbd>Ctrl K</kbd>}
+              ) : (
+                <kbd>Ctrl K</kbd>
+              )}
             </div>
 
             {searchOpen && (
-              <div className="header-search-dropdown" id="header-search-results" role="listbox" aria-label="Search results">
+              <div
+                className="header-search-dropdown"
+                id="header-search-results"
+                role="listbox"
+                aria-label="Search results"
+              >
                 <div className="header-search-caption">
-                  <span>{searchQuery.trim() ? 'SEARCH RESULTS' : 'QUICK JUMP'}</span>
-                  <span>{searchResults.length} {searchResults.length === 1 ? 'result' : 'results'}</span>
+                  <span>
+                    {searchQuery.trim()
+                      ? 'SEARCH RESULTS'
+                      : 'QUICK JUMP'}
+                  </span>
+
+                  <span>
+                    {searchResults.length}{' '}
+                    {searchResults.length === 1
+                      ? 'result'
+                      : 'results'}
+                  </span>
                 </div>
-                {searchResults.length ? searchResults.map((item, index) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    role="option"
-                    aria-selected={selectedSearchResult === index}
-                    className={`header-search-result ${selectedSearchResult === index ? 'selected' : ''}`}
-                    onMouseEnter={() => setSelectedSearchResult(index)}
-                    onClick={() => chooseSearchResult(item)}
-                  >
-                    <span className="header-search-result-icon"><Icon name={item.icon} size={16} /></span>
-                    <span className="header-search-result-copy"><strong>{item.label}</strong><small>{item.description}</small></span>
-                    <span className="header-search-result-kind">{item.kind}</span>
-                  </button>
-                )) : (
+
+                {searchResults.length > 0 ? (
+                  searchResults.map((item, index) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      role="option"
+                      aria-selected={
+                        selectedSearchResult === index
+                      }
+                      className={`header-search-result ${
+                        selectedSearchResult === index
+                          ? 'selected'
+                          : ''
+                      }`}
+                      onMouseEnter={() =>
+                        setSelectedSearchResult(index)
+                      }
+                      onClick={() =>
+                        chooseSearchResult(item)
+                      }
+                    >
+                      <span className="header-search-result-icon">
+                        <Icon
+                          name={item.icon}
+                          size={16}
+                        />
+                      </span>
+
+                      <span className="header-search-result-copy">
+                        <strong>{item.label}</strong>
+                        <small>{item.description}</small>
+                      </span>
+
+                      <span className="header-search-result-kind">
+                        {item.kind}
+                      </span>
+                    </button>
+                  ))
+                ) : (
                   <div className="header-search-empty">
                     <SearchIcon size={19} />
                     <strong>No matching result</strong>
-                    <span>Try “DBMS”, “ER model”, “PYQs” or “Focus”.</span>
+                    <span>
+                      Try “DBMS”, “ER model”, “PYQs” or “Focus”.
+                    </span>
                   </div>
                 )}
-                <div className="header-search-footer"><span><kbd>↑</kbd><kbd>↓</kbd> navigate</span><span><kbd>↵</kbd> open</span><span><kbd>Esc</kbd> close</span></div>
+
+                <div className="header-search-footer">
+                  <span>
+                    <kbd>↑</kbd>
+                    <kbd>↓</kbd>
+                    navigate
+                  </span>
+
+                  <span>
+                    <kbd>↵</kbd>
+                    open
+                  </span>
+
+                  <span>
+                    <kbd>Esc</kbd>
+                    close
+                  </span>
+                </div>
               </div>
             )}
           </div>
 
+          {/* Existing theme toggle. */}
           <button
             className="theme-btn"
+            type="button"
             onClick={() =>
-              setState((s) => ({
-                ...s,
-                dark: !s.dark
+              setState((current) => ({
+                ...current,
+                dark: !current.dark
               }))
             }
-            aria-label={state.dark ? 'Switch to light theme' : 'Switch to dark theme'}
+            aria-label={
+              state.dark
+                ? 'Switch to light theme'
+                : 'Switch to dark theme'
+            }
             title="Toggle theme (T)"
           >
-            <Icon name={state.dark ? 'sun' : 'moon'} size={20} />
+            <Icon
+              name={state.dark ? 'sun' : 'moon'}
+              size={20}
+            />
           </button>
         </div>
       </header>
@@ -893,15 +1285,25 @@ export default function App() {
 
       {!idle && active !== 'focus' && (
         <div className="dock" role="status">
-          <span className={`dock-dot ${running ? 'live' : ''}`} />
+          <span
+            className={`dock-dot ${running ? 'live' : ''}`}
+          />
+
           <b>{clock(secsLeft)}</b>
+
           <button
+            type="button"
             className="ghost"
             onClick={running ? pause : start}
           >
             {running ? 'Pause' : 'Resume'}
           </button>
-          <button className="link" onClick={() => go('focus')}>
+
+          <button
+            type="button"
+            className="link"
+            onClick={() => go('focus')}
+          >
             Open
           </button>
         </div>
@@ -923,7 +1325,8 @@ export default function App() {
         </div>
 
         <div className="made-by">
-          Made by <span className="maker-icon">✦</span> <strong>Tejas Patel</strong>
+          Made by <span className="maker-icon">✦</span>{' '}
+          <strong>Tejas Patel</strong>
         </div>
       </footer>
     </div>
