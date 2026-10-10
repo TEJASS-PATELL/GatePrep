@@ -7318,7 +7318,12 @@ tbody tr:hover td {
   }
 }
 
-/* Header search — extends the original GATE CSE header without changing its layout. */
+/* ==========================================
+   HEADER SEARCH — GATE CSE STUDY DESK
+   Desktop: original navbar preserved
+   Mobile: search bar only
+   ========================================== */
+
 .header-search-wrap {
   position: relative;
   z-index: 35;
@@ -7332,6 +7337,7 @@ tbody tr:hover td {
   display: flex;
   align-items: center;
   gap: 9px;
+  width: 100%;
   min-width: 0;
   height: 42px;
   padding: 0 12px;
@@ -7339,12 +7345,17 @@ tbody tr:hover td {
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 999px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.25s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.25s ease;
 }
 
 .header-search-wrap.is-open .header-search-box,
 .header-search-box:focus-within {
   border-color: var(--blue);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--blue) 12%, transparent);
 }
 
 .header-search-box > svg {
@@ -7354,16 +7365,23 @@ tbody tr:hover td {
 
 .header-search-input {
   display: block;
+  flex: 1;
   width: 100%;
   min-width: 0;
   padding: 0;
   color: var(--ink);
   background: transparent;
   border: 0;
-  outline: 0 !important;
+  outline: none !important;
   box-shadow: none !important;
-  font: inherit;
+  font-family: var(--font-body);
   font-size: 13px;
+}
+
+.header-search-input:focus {
+  border: 0;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .header-search-input::placeholder {
@@ -7400,12 +7418,15 @@ tbody tr:hover td {
   border-radius: 50%;
   font-size: 21px;
   line-height: 1;
+  cursor: pointer;
 }
 
 .header-search-clear:hover {
   color: var(--ink);
   background: var(--paper-2);
 }
+
+/* ---------- SEARCH DROPDOWN ---------- */
 
 .header-search-dropdown {
   position: absolute;
@@ -7414,7 +7435,9 @@ tbody tr:hover td {
   z-index: 70;
   width: min(440px, calc(100vw - 28px));
   max-height: min(68vh, 540px);
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 8px;
   color: var(--ink);
   background: var(--paper);
@@ -7422,11 +7445,27 @@ tbody tr:hover td {
   border-radius: 16px;
   box-shadow: var(--shadow-lg);
   animation: header-search-in 0.14s ease-out both;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.header-search-dropdown::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 @keyframes header-search-in {
-  from { opacity: 0; transform: translateY(-5px) scale(0.99); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.99);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .header-search-caption {
@@ -7447,6 +7486,8 @@ tbody tr:hover td {
   letter-spacing: 0;
 }
 
+/* ---------- SEARCH RESULT ITEMS ---------- */
+
 .header-search-result {
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr) auto;
@@ -7461,13 +7502,20 @@ tbody tr:hover td {
   border: 1px solid transparent;
   border-radius: 11px;
   cursor: pointer;
-  transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.16s ease;
 }
 
 .header-search-result:hover,
 .header-search-result.selected {
   background: var(--hl);
-  border-color: color-mix(in srgb, var(--blue) 20%, transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--blue) 20%,
+    transparent
+  );
 }
 
 .header-search-result.selected {
@@ -7480,7 +7528,11 @@ tbody tr:hover td {
   height: 34px;
   place-items: center;
   color: var(--blue);
-  background: color-mix(in srgb, var(--blue) 11%, var(--paper));
+  background: color-mix(
+    in srgb,
+    var(--blue) 11%,
+    var(--paper)
+  );
   border-radius: 10px;
 }
 
@@ -7493,6 +7545,7 @@ tbody tr:hover td {
 
 .header-search-result-copy strong {
   overflow: hidden;
+  color: var(--ink);
   font-size: 13px;
   font-weight: 650;
   text-overflow: ellipsis;
@@ -7518,6 +7571,8 @@ tbody tr:hover td {
   white-space: nowrap;
 }
 
+/* ---------- EMPTY SEARCH ---------- */
+
 .header-search-empty {
   display: flex;
   flex-direction: column;
@@ -7542,6 +7597,8 @@ tbody tr:hover td {
   font-size: 12px;
 }
 
+/* ---------- KEYBOARD HINTS ---------- */
+
 .header-search-footer {
   display: flex;
   align-items: center;
@@ -7561,82 +7618,181 @@ tbody tr:hover td {
   gap: 4px;
 }
 
-@media (max-width: 1100px) {
+/* ---------- TABLET ---------- */
+
+@media (max-width: 1100px) and (min-width: 861px) {
   .header-search-wrap {
     flex-basis: 250px;
     width: 250px;
     min-width: 180px;
     margin-left: 6px;
   }
+
+  .header-search-dropdown {
+    width: min(420px, calc(100vw - 28px));
+  }
 }
+
+/* ==========================================
+   MOBILE — SEARCH BAR ONLY
+   Hide the navigation and theme button.
+   ========================================== */
 
 @media (max-width: 860px) {
   .topbar-in {
-    flex-wrap: wrap;
-    gap: 9px;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0;
+    padding: 10px 16px;
   }
 
+  /* Hide the original navigation on mobile. */
   .topnav {
-    order: 3;
-    flex: 1 1 100%;
-    width: 100%;
+    display: none !important;
+  }
+
+  /* Hide the theme button so only search remains. */
+  .topbar-in > .theme-btn {
+    display: none !important;
   }
 
   .header-search-wrap {
-    order: 1;
-    flex: 1 1 0;
-    width: auto;
+    display: block;
+    order: 0;
+    flex: 1 1 100%;
+    width: 100%;
     min-width: 0;
-    margin-left: 0;
+    max-width: none;
+    margin: 0;
   }
 
-  .theme-btn {
-    order: 2;
-  }
-
-  .header-search-dropdown {
-    right: 0;
-  }
-}
-
-@media (max-width: 480px) {
   .header-search-box {
-    height: 40px;
-    padding: 0 10px;
+    width: 100%;
+    height: 44px;
+    gap: 10px;
+    padding: 0 13px;
+    border-radius: 13px;
   }
 
   .header-search-input {
-    font-size: 12px;
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    font-size: 14px;
+  }
+
+  .header-search-box kbd {
+    font-size: 10px;
+  }
+
+  .header-search-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    left: 0;
+    width: 100%;
+    max-width: none;
+    max-height: min(65dvh, 480px);
+    padding: 7px;
+    border-radius: 14px;
+  }
+
+  .header-search-result {
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    gap: 9px;
+    padding: 10px 8px;
+  }
+
+  .header-search-result-copy strong {
+    font-size: 13px;
+  }
+
+  .header-search-result-copy small {
+    font-size: 11px;
+  }
+
+  .header-search-footer {
+    gap: 6px;
+    padding: 9px 6px 3px;
+    font-size: 10px;
+  }
+}
+
+/* ---------- SMALL MOBILE ---------- */
+
+@media (max-width: 480px) {
+  .topbar-in {
+    padding: 9px 12px;
+  }
+
+  .header-search-box {
+    height: 42px;
+    gap: 8px;
+    padding: 0 11px;
+  }
+
+  .header-search-input {
+    font-size: 13px;
   }
 
   .header-search-box kbd {
     display: none;
   }
 
+  .header-search-clear {
+    width: 23px;
+    height: 23px;
+  }
+
+  .header-search-dropdown {
+    max-height: min(62dvh, 430px);
+    border-radius: 13px;
+  }
+
+  .header-search-caption {
+    padding: 8px 7px;
+    font-size: 9px;
+  }
+
   .header-search-result {
     grid-template-columns: 30px minmax(0, 1fr) auto;
     gap: 8px;
-    padding: 9px 7px;
+    padding: 9px 6px;
   }
 
   .header-search-result-icon {
     width: 30px;
     height: 30px;
+    border-radius: 8px;
+  }
+
+  .header-search-result-copy strong {
+    font-size: 12px;
+  }
+
+  .header-search-result-copy small {
+    font-size: 10.5px;
   }
 
   .header-search-result-kind {
     padding: 3px 5px;
     font-size: 9px;
   }
-}
 
-@media (prefers-reduced-motion: reduce) {
-  .header-search-dropdown {
-    animation: none;
+  .header-search-empty {
+    padding: 20px 8px;
+  }
+
+  .header-search-footer {
+    justify-content: center;
+    gap: 10px;
+    font-size: 9.5px;
   }
 }
 
-/* Hide scrollbars without disabling scrolling */
+/* ---------- HIDE SCROLLBARS ---------- */
+
 html,
 body,
 #root,
@@ -7653,15 +7809,86 @@ body::-webkit-scrollbar,
 #root::-webkit-scrollbar,
 .shell::-webkit-scrollbar,
 .page::-webkit-scrollbar,
-.topnav::-webkit-scrollbar,
-.header-search-dropdown::-webkit-scrollbar {
+.topnav::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
 }
 
-/* Keep search results scrollable */
-.header-search-dropdown {
-  overflow-y: auto;
-  overscroll-behavior: contain;
+/* ---------- ACCESSIBILITY ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .header-search-dropdown {
+    animation: none;
+  }
+
+  .header-search-box,
+  .header-search-result {
+    transition: none;
+  }
+}
+
+/* Mobile header: Search + Theme toggle */
+
+@media (max-width: 860px) {
+  .topbar-in {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .topnav {
+    display: none !important;
+  }
+
+  .header-search-wrap {
+    order: 1;
+    flex: 1 1 0%;
+    width: auto;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .topbar-in > .theme-btn {
+    display: grid !important;
+    order: 2;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    place-items: center;
+    border: none;
+    border-radius: 12px;
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  .topbar-in > .theme-btn:hover {
+    color: var(--blue);
+    border-color: var(--blue);
+  }
+
+  .header-search-dropdown {
+    left: 0;
+    right: auto;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar-in {
+    gap: 8px;
+    padding: 9px 12px;
+  }
+
+  .topbar-in > .theme-btn {
+    flex-basis: 40px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .header-search-box {
+    height: 42px;
+  }
 }
