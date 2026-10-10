@@ -7317,3 +7317,321 @@ tbody tr:hover td {
     font-size: 0.67rem;
   }
 }
+
+/* Header search — extends the original GATE CSE header without changing its layout. */
+.header-search-wrap {
+  position: relative;
+  z-index: 35;
+  flex: 0 1 300px;
+  width: 300px;
+  min-width: 200px;
+  margin-left: 10px;
+}
+
+.header-search-box {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  height: 42px;
+  padding: 0 12px;
+  color: var(--mute);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.25s ease;
+}
+
+.header-search-wrap.is-open .header-search-box,
+.header-search-box:focus-within {
+  border-color: var(--blue);
+}
+
+.header-search-box > svg {
+  flex: 0 0 auto;
+  color: var(--blue);
+}
+
+.header-search-input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  outline: 0 !important;
+  box-shadow: none !important;
+  font: inherit;
+  font-size: 13px;
+}
+
+.header-search-input::placeholder {
+  color: var(--mute);
+  opacity: 0.9;
+}
+
+.header-search-box kbd,
+.header-search-footer kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 23px;
+  padding: 3px 5px;
+  color: var(--mute);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font: 600 10px/1.2 var(--font-body);
+  white-space: nowrap;
+}
+
+.header-search-clear {
+  display: grid;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  padding: 0;
+  color: var(--mute);
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  font-size: 21px;
+  line-height: 1;
+}
+
+.header-search-clear:hover {
+  color: var(--ink);
+  background: var(--paper-2);
+}
+
+.header-search-dropdown {
+  position: absolute;
+  top: calc(100% + 9px);
+  right: 0;
+  z-index: 70;
+  width: min(440px, calc(100vw - 28px));
+  max-height: min(68vh, 540px);
+  overflow: auto;
+  padding: 8px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  animation: header-search-in 0.14s ease-out both;
+}
+
+@keyframes header-search-in {
+  from { opacity: 0; transform: translateY(-5px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.header-search-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 10px 9px;
+  color: var(--mute);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.header-search-caption span:last-child {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.header-search-result {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  padding: 10px;
+  color: var(--ink);
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+
+.header-search-result:hover,
+.header-search-result.selected {
+  background: var(--hl);
+  border-color: color-mix(in srgb, var(--blue) 20%, transparent);
+}
+
+.header-search-result.selected {
+  transform: translateX(1px);
+}
+
+.header-search-result-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: var(--blue);
+  background: color-mix(in srgb, var(--blue) 11%, var(--paper));
+  border-radius: 10px;
+}
+
+.header-search-result-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.header-search-result-copy strong {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-search-result-copy small {
+  overflow: hidden;
+  color: var(--mute);
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-search-result-kind {
+  padding: 4px 7px;
+  color: var(--mute);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.header-search-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 24px 12px;
+  color: var(--mute);
+  text-align: center;
+}
+
+.header-search-empty > svg {
+  margin-bottom: 3px;
+  color: var(--blue);
+}
+
+.header-search-empty strong {
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.header-search-empty span {
+  font-size: 12px;
+}
+
+.header-search-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 9px 9px 2px;
+  color: var(--mute);
+  border-top: 1px solid var(--line);
+  font-size: 10.5px;
+}
+
+.header-search-footer span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+@media (max-width: 1100px) {
+  .header-search-wrap {
+    flex-basis: 250px;
+    width: 250px;
+    min-width: 180px;
+    margin-left: 6px;
+  }
+}
+
+@media (max-width: 860px) {
+  .topbar-in {
+    flex-wrap: wrap;
+    gap: 9px;
+  }
+
+  .topnav {
+    order: 3;
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .header-search-wrap {
+    order: 1;
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+    margin-left: 0;
+  }
+
+  .theme-btn {
+    order: 2;
+  }
+
+  .header-search-dropdown {
+    right: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-search-box {
+    height: 40px;
+    padding: 0 10px;
+  }
+
+  .header-search-input {
+    font-size: 12px;
+  }
+
+  .header-search-box kbd {
+    display: none;
+  }
+
+  .header-search-result {
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 9px 7px;
+  }
+
+  .header-search-result-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .header-search-result-kind {
+    padding: 3px 5px;
+    font-size: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-search-dropdown {
+    animation: none;
+  }
+}

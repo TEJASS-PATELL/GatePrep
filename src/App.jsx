@@ -10,7 +10,16 @@ import Focus from './Pages/Focus.jsx';
 import Tests from './Pages/Tests.jsx';
 import Mistakes from './Pages/Mistakes.jsx';
 import Settings from './Pages/Settings.jsx';
-import { Icon, KEY, NAV, REVIEW_INTERVALS, REV_ROUNDS, blank, clock, dateAfter, generatePlan, load, regenerateIfNeeded, today, track, uid, units, usePageIn, ymd } from './Pages/shared.jsx';
+import { Icon, KEY, NAV, NAMES, SUBJECTS, REVIEW_INTERVALS, REV_ROUNDS, blank, clock, dateAfter, generatePlan, load, regenerateIfNeeded, today, track, uid, units, usePageIn, ymd } from './Pages/shared.jsx';
+
+function SearchIcon({ size = 17 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="10.8" cy="10.8" r="6.8" />
+      <path d="m16 16 4.5 4.5" />
+    </svg>
+  );
+}
 
 export default function App() {
   const [state, setState] = useState(load);
@@ -27,6 +36,12 @@ export default function App() {
 
   const [now, setNow] = useState(() => Date.now());
   const [toast, setToast] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [selectedSearchResult, setSelectedSearchResult] = useState(0);
+  const [subjectJump, setSubjectJump] = useState('');
+  const searchInputRef = useRef(null);
+  const searchWrapRef = useRef(null);
   const pageRef = useRef(null);
   const touchStartRef = useRef(null);
 
@@ -67,6 +82,112 @@ export default function App() {
     window.location.hash = id;
     setPage(id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const searchResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    const pageIcons = {
+      dashboard: 'chart', subjects: 'book', pyqs: 'check', revision: 'rotate',
+      priority: 'flag', plan: 'star', focus: 'timer', tests: 'chart',
+      mistakes: 'alert', settings: 'note'
+    };
+    const pageItems = NAV.map(([id, label], order) => ({
+      id: `page-${id}`,
+      kind: 'Page',
+      label,
+      description: ({
+        dashboard: 'Progress overview and next steps',
+        subjects: 'Syllabus topics, learning progress and weak areas',
+        pyqs: 'Previous-year question tracking',
+        revision: 'Topics scheduled for revision',
+        priority: 'High-impact subjects and priorities',
+        plan: 'Today’s study tasks',
+        focus: 'Pomodoro timer and focus sessions',
+        tests: 'Mock-test scores and performance',
+        mistakes: 'Mistake notebook and patterns',
+        settings: 'Targets, backups and preferences'
+      })[id],
+      icon: pageIcons[id],
+      action: { type: 'page', page: id },
+      haystack: `${label} ${id}`,
+      order
+    }));
+    const subjectItems = NAMES.map((name, order) => {
+      const done = (state.subjects[name]?.learn || []).filter(Boolean).length;
+      const total = SUBJECTS[name].topics.length;
+      return {
+        id: `subject-${name}`, kind: 'Subject', label: name,
+        description: `${done}/${total} topics learned · open in Subjects`,
+        icon: 'book', action: { type: 'subject', query: name },
+        haystack: `${name} ${SUBJECTS[name].short}`, order
+      };
+    });
+    const topicItems = NAMES.flatMap((name) => SUBJECTS[name].topics.map((topic, order) => ({
+      id: `topic-${name}-${order}`, kind: 'Topic', label: topic,
+      description: name, icon: 'note',
+      action: { type: 'topic', query: topic },
+      haystack: `${topic} ${name}`, order
+    })));
+
+    if (!query) return [pageItems[0], pageItems[1], pageItems[2], pageItems[3], pageItems[6]];
+
+    const kindRank = { Page: 0, Subject: 1, Topic: 2 };
+    return [...pageItems, ...subjectItems, ...topicItems]
+      .filter((item) => `${item.label} ${item.description} ${item.haystack}`.toLowerCase().includes(query))
+      .sort((a, b) => {
+        const aLabel = a.label.toLowerCase();
+        const bLabel = b.label.toLowerCase();
+        const aExact = aLabel === query ? 0 : 1;
+        const bExact = bLabel === query ? 0 : 1;
+        if (aExact !== bExact) return aExact - bExact;
+        const aStarts = aLabel.startsWith(query) ? 0 : 1;
+        const bStarts = bLabel.startsWith(query) ? 0 : 1;
+        if (aStarts !== bStarts) return aStarts - bStarts;
+        return kindRank[a.kind] - kindRank[b.kind] || a.order - b.order;
+      })
+      .slice(0, 9);
+  }, [searchQuery, state.subjects]);
+
+  const chooseSearchResult = useCallback((item) => {
+    setSearchOpen(false);
+    setSearchQuery('');
+    setSelectedSearchResult(0);
+    if (item.action.type === 'page') {
+      setSubjectJump('');
+      go(item.action.page);
+      return;
+    }
+    setSubjectJump(item.action.query);
+    go('subjects');
+  }, [go]);
+
+  useEffect(() => {
+    const onPointerDown = (event) => {
+      if (!searchWrapRef.current?.contains(event.target)) setSearchOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, []);
+
+  useEffect(() => {
+    const onShortcut = (event) => {
+      const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName) || event.target.isContentEditable;
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setSearchOpen(true);
+        searchInputRef.current?.focus();
+        return;
+      }
+      if (!typing && !event.ctrlKey && !event.metaKey && !event.altKey && event.key === '/') {
+        event.preventDefault();
+        setSearchOpen(true);
+        searchInputRef.current?.focus();
+      } else if (event.key === 'Escape') {
+        setSearchOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onShortcut);
+    return () => window.removeEventListener('keydown', onShortcut);
   }, []);
 
   const handleTouchStart = (event) => {
@@ -564,6 +685,8 @@ export default function App() {
     ),
     subjects: (
       <Subjects
+        key={subjectJump}
+        initialQuery={subjectJump}
         state={state}
         toggleLearn={toggleLearn}
         toggleWeak={toggleWeak}
@@ -644,12 +767,100 @@ export default function App() {
                 key={id}
                 className={`nav-item ${active === id ? 'active' : ''}`}
                 aria-current={active === id ? 'page' : undefined}
-                onClick={() => go(id)}
+                onClick={() => {
+                  setSearchOpen(false);
+                  if (id === 'subjects') setSubjectJump('');
+                  go(id);
+                }}
               >
                 {label}
               </button>
             ))}
           </nav>
+
+          <div className={`header-search-wrap ${searchOpen ? 'is-open' : ''}`} ref={searchWrapRef}>
+            <div className="header-search-box">
+              <SearchIcon size={17} />
+              <input
+                ref={searchInputRef}
+                className="header-search-input"
+                type="text"
+                value={searchQuery}
+                onFocus={() => setSearchOpen(true)}
+                onChange={(event) => {
+                  setSearchQuery(event.target.value);
+                  setSelectedSearchResult(0);
+                  setSearchOpen(true);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    setSelectedSearchResult((index) => Math.min(searchResults.length - 1, index + 1));
+                  } else if (event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    setSelectedSearchResult((index) => Math.max(0, index - 1));
+                  } else if (event.key === 'Enter' && searchResults[selectedSearchResult]) {
+                    event.preventDefault();
+                    chooseSearchResult(searchResults[selectedSearchResult]);
+                  } else if (event.key === 'Escape') {
+                    event.preventDefault();
+                    setSearchOpen(false);
+                  }
+                }}
+                placeholder="Search pages, subjects, topics…"
+                aria-label="Search pages, subjects and syllabus topics"
+                aria-expanded={searchOpen}
+                aria-controls="header-search-results"
+                autoComplete="off"
+              />
+              {searchQuery ? (
+                <button
+                  className="header-search-clear"
+                  type="button"
+                  aria-label="Clear search"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedSearchResult(0);
+                    setSearchOpen(true);
+                    searchInputRef.current?.focus();
+                  }}
+                >
+                  ×
+                </button>
+              ) : <kbd>Ctrl K</kbd>}
+            </div>
+
+            {searchOpen && (
+              <div className="header-search-dropdown" id="header-search-results" role="listbox" aria-label="Search results">
+                <div className="header-search-caption">
+                  <span>{searchQuery.trim() ? 'SEARCH RESULTS' : 'QUICK JUMP'}</span>
+                  <span>{searchResults.length} {searchResults.length === 1 ? 'result' : 'results'}</span>
+                </div>
+                {searchResults.length ? searchResults.map((item, index) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="option"
+                    aria-selected={selectedSearchResult === index}
+                    className={`header-search-result ${selectedSearchResult === index ? 'selected' : ''}`}
+                    onMouseEnter={() => setSelectedSearchResult(index)}
+                    onClick={() => chooseSearchResult(item)}
+                  >
+                    <span className="header-search-result-icon"><Icon name={item.icon} size={16} /></span>
+                    <span className="header-search-result-copy"><strong>{item.label}</strong><small>{item.description}</small></span>
+                    <span className="header-search-result-kind">{item.kind}</span>
+                  </button>
+                )) : (
+                  <div className="header-search-empty">
+                    <SearchIcon size={19} />
+                    <strong>No matching result</strong>
+                    <span>Try “DBMS”, “ER model”, “PYQs” or “Focus”.</span>
+                  </div>
+                )}
+                <div className="header-search-footer"><span><kbd>↑</kbd><kbd>↓</kbd> navigate</span><span><kbd>↵</kbd> open</span><span><kbd>Esc</kbd> close</span></div>
+              </div>
+            )}
+          </div>
 
           <button
             className="theme-btn"
@@ -659,17 +870,10 @@ export default function App() {
                 dark: !s.dark
               }))
             }
-            aria-label={
-              state.dark
-                ? 'Switch to light theme'
-                : 'Switch to dark theme'
-            }
+            aria-label={state.dark ? 'Switch to light theme' : 'Switch to dark theme'}
             title="Toggle theme (T)"
           >
-            <Icon
-              name={state.dark ? 'sun' : 'moon'}
-              size={20}
-            />
+            <Icon name={state.dark ? 'sun' : 'moon'} size={20} />
           </button>
         </div>
       </header>
@@ -715,7 +919,7 @@ export default function App() {
           <span>·</span>
           Progress is stored locally in this browser
           <span>·</span>
-          Press 1–9 to switch pages, T for theme
+          Press 1–9 to switch pages, / or Ctrl K to search, T for theme
         </div>
 
         <div className="made-by">
